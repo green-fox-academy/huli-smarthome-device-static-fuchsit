@@ -42,6 +42,10 @@
 *.idb
 *.pdb
 
+# Eclipse workspace files
+Debug
+.settings
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
