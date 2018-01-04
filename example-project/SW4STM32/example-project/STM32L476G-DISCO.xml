@@ -10,10 +10,11 @@
 ]>
 
 <targetDefinitions>
-  <board id="stm32l475vgtx">
-    <name>STM32L475VGTx</name>
+  <board id="stm32l476g-disco">
+    <name>STM32L476G-DISCO</name>
+    <dbgIF>JTAG</dbgIF>
     <dbgIF>SWD</dbgIF>
     <dbgDEV>ST-Link</dbgDEV>
-    <mcuId>stm32l475vgtx</mcuId>
+    <mcuId>stm32l476vgtx</mcuId>
   </board>
 </targetDefinitions>
