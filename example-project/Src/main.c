@@ -74,8 +74,6 @@ typedef struct WolfSocketContext {
 uint32_t socketId = 0;
 
 /* Private define ------------------------------------------------------------*/
-//#define SSID     "Cethal"
-//#define PASSWORD "ideahelysegben"
 #define SSID     "A66 Guest"
 #define PASSWORD "Hello123"
 //#define SSID     "AndroidAP"
@@ -151,6 +149,7 @@ static int MqttNetWrite(void *context, const byte* buf, int buf_len,
 	printf("MqttNetWrite() - ");
 	WolfSocketContext *ctx = (WolfSocketContext*) context;
 	uint16_t sent_len;
+
 	if (WIFI_SendData(ctx->id, (byte*) buf, buf_len, &sent_len, timeout_ms)
 			!= WIFI_STATUS_OK) {
 		printf("FAIL\r\n");
