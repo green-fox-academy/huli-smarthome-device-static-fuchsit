@@ -163,6 +163,7 @@ static int MqttNetRead(void *context, byte* buf, int buf_len, int timeout_ms) {
 	printf("MqttNetRead() - ");
 	WolfSocketContext *ctx = (WolfSocketContext*) context;
 	uint16_t rcpt_len = 0;
+
 	if (WIFI_ReceiveData(ctx->id, buf, buf_len, &rcpt_len, timeout_ms)
 			!= WIFI_STATUS_OK) {
 		printf("FAIL\r\n");
