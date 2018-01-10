@@ -3,6 +3,8 @@
 #include "stdio.h"
 #include "sec_conf.h"
 
+WolfSocketContext mqttContext = { 0 };
+
 int WolfsslReadCallback(WOLFSSL* ssl, char* buf, int sz, void* context) {
 	printf("WolfsslReadCallback() - ");
 	WolfSocketContext *ctx = (WolfSocketContext*) context;
