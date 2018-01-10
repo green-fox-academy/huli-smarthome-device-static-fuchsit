@@ -69,8 +69,6 @@ uint32_t socketId = 0;
 /* Private define ------------------------------------------------------------*/
 #define SSID     "A66 Guest"
 #define PASSWORD "Hello123"
-//#define SSID     "AndroidAP"
-//#define PASSWORD "Buzi3vagy"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -135,7 +133,8 @@ int main(void) {
 	}
 
 	if (EXAMPLE_KIND) {
-		int res = Wolfssl_TlsConnect("mqtt.googleapis.com", 8883);
+		//static int Wolfssl_TlsConnect(const char *host, int port)
+		int res = Wolfssl_TlsConnect("mqtt.googleapis.com", 8883); //cant see the conf file
 		printf("---- TLS RESULT: %d ----\r\n", res);
 	} else {
 		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
