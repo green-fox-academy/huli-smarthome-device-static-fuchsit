@@ -38,13 +38,8 @@
 #define PRINTF printf
 
 #include "main.h"
-#include "wolfmqtt/mqtt_client.h"
 #include "stdio.h"
-#include <wolfssl/options.h>
-#include <wolfssl/ssl.h>
-#include <wolfssl/certs_test.h>
-#include "wolfssl/wolfio.h"
-#include "wolfssl_net.h"
+
 
 // 0 = MQTT example, 1 = TLS example
 #define EXAMPLE_KIND	1
@@ -67,19 +62,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 
-typedef struct WolfSocketContext {
-	uint32_t id;
-} WolfSocketContext;
+
 
 uint32_t socketId = 0;
 
 /* Private define ------------------------------------------------------------*/
-//#define SSID     "Cethal"
-//#define PASSWORD "ideahelysegben"
 #define SSID     "A66 Guest"
 #define PASSWORD "Hello123"
-//#define SSID     "AndroidAP"
-//#define PASSWORD "Buzi3vagy"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -98,10 +87,7 @@ word16 packetId = 0;
 
 MqttClient mqttClient;
 MqttNet mqttNetwork;
-WolfSocketContext mqttContext = { 0 };
 
-static uint8_t tx_buf[MAX_BUFFER_SIZE];
-static uint8_t rx_buf[MAX_BUFFER_SIZE];
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -120,284 +106,6 @@ time_t custom_time(time_t x) {
 unsigned int custom_rand_generate(void) {
 	printf("Custom RNG invoked!\r\n");
 	return HAL_RNG_GetRandomNumber(&rngHandle) >> 24;
-}
-
-static int MqttNetConnect(void *context, const char* host, word16 port,
-		int timeout_ms) {
-	printf("MqttNetConnect() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-	uint8_t destIp[4];
-
-	if (WIFI_GetHostAddress((char*) host, destIp) != WIFI_STATUS_OK) {
-		printf("FAIL DNS\r\n");
-		return MQTT_CODE_ERROR_BAD_ARG;
-	}
-
-	printf("\r\n\tDNS lookup result: %s => %d.%d.%d.%d\r\n...", host, destIp[0],
-			destIp[1], destIp[2], destIp[3]);
-
-	if (WIFI_OpenClientConnection(ctx->id, WIFI_TCP_PROTOCOL, "TCP_CLIENT",
-			destIp, port, timeout_ms) != WIFI_STATUS_OK) {
-		printf("FAIL OPEN\r\n");
-		return MQTT_CODE_ERROR_BAD_ARG;
-	}
-
-	printf("SUCCESS\r\n");
-	return MQTT_CODE_SUCCESS;
-}
-
-static int MqttNetWrite(void *context, const byte* buf, int buf_len,
-		int timeout_ms) {
-	printf("MqttNetWrite() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-	uint16_t sent_len;
-	if (WIFI_SendData(ctx->id, (byte*) buf, buf_len, &sent_len, timeout_ms)
-			!= WIFI_STATUS_OK) {
-		printf("FAIL\r\n");
-		return MQTT_CODE_ERROR_BAD_ARG;
-	}
-	printf("SUCCESS\r\n");
-	return buf_len;
-}
-
-static int MqttNetRead(void *context, byte* buf, int buf_len, int timeout_ms) {
-	printf("MqttNetRead() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-	uint16_t rcpt_len = 0;
-	if (WIFI_ReceiveData(ctx->id, buf, buf_len, &rcpt_len, timeout_ms)
-			!= WIFI_STATUS_OK) {
-		printf("FAIL\r\n");
-		return MQTT_CODE_ERROR_BAD_ARG;
-	}
-	if (rcpt_len == 0) {
-		printf("TIMEOUT\r\n");
-		return MQTT_CODE_ERROR_TIMEOUT;
-	}
-	printf("SUCCESS\r\n");
-	return rcpt_len;
-}
-
-static int MqttNetDisconnect(void *context) {
-	printf("MqttNetDisconnect() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-	if (WIFI_CloseClientConnection(ctx->id) != WIFI_STATUS_OK) {
-		printf("FAIL\r\n");
-		return MQTT_CODE_ERROR_BAD_ARG;
-	}
-	printf("SUCCESS\r\n");
-	return MQTT_CODE_SUCCESS;
-}
-
-int WolfsslReadCallback(WOLFSSL* ssl, char* buf, int sz, void* context) {
-	printf("WolfsslReadCallback() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-	int totalSent = 0;
-	int sendingSize = sz;
-	int remainingDataSize = sz;
-	char *sendStartPtr = buf;
-
-	do {
-		if (sendingSize > ES_WIFI_PAYLOAD_SIZE) {
-			sendingSize = ES_WIFI_PAYLOAD_SIZE;
-		}
-		int sent = 0;
-		int pRc = WIFI_ReceiveData(ctx->id, (byte*) sendStartPtr, sendingSize,
-				&sent, DEFAULT_TIMEOUT);
-		if (pRc != WIFI_STATUS_OK) {
-			printf("FAIL RC: %d\r\n", pRc);
-			break;
-		}
-		totalSent += sent;
-		sendStartPtr += sendingSize;
-		remainingDataSize -= sendingSize;
-		sendingSize = remainingDataSize;
-
-	} while (remainingDataSize > 0);
-	printf("SUCCESS\r\n");
-	return totalSent;
-}
-
-int WolfsslWriteCallback(WOLFSSL* ssl, char* buf, int sz, void* context) {
-	printf("WolfsslWriteCallback() - ");
-	WolfSocketContext *ctx = (WolfSocketContext*) context;
-
-	int totalSent = 0;
-	int sendingSize = sz;
-	int remainingDataSize = sz;
-	char *sendStartPtr = buf;
-
-	do {
-		if (sendingSize > ES_WIFI_PAYLOAD_SIZE) {
-			sendingSize = ES_WIFI_PAYLOAD_SIZE;
-		}
-		int sent = 0;
-		int pRc = WIFI_SendData(ctx->id, (byte*) sendStartPtr, sendingSize,
-				&sent, DEFAULT_TIMEOUT);
-		if (pRc != WIFI_STATUS_OK) {
-			printf("FAIL RC: %d\r\n", pRc);
-			break;
-		}
-		totalSent += sent;
-		sendStartPtr += sendingSize;
-		remainingDataSize -= sendingSize;
-		sendingSize = remainingDataSize;
-
-	} while (remainingDataSize > 0);
-	printf("SUCCESS\r\n");
-	return totalSent;
-}
-
-
-static int mqttclient_message_cb(MqttClient *client, MqttMessage *msg,
-		byte msg_new, byte msg_done) {
-
-	byte buf[MAX_BUFFER_SIZE + 1];
-
-	if (msg_new) {
-		printf("\r\n\r\n--------- MESSAGE BEGIN ---------\r\n");
-		XMEMCPY(buf, msg->topic_name, msg->topic_name_len);
-		buf[msg->topic_name_len] = '\0';
-		printf("Topic:\t\t%s\r\n", buf);
-		printf("Content:\t");
-	}
-
-	XMEMCPY(buf, msg->buffer, msg->buffer_len);
-	buf[msg->buffer_len] = '\0';
-
-	printf("%s", buf);
-
-	if (msg_done) {
-		printf("\r\n---------- MESSAGE END ----------\r\n\r\n");
-	}
-
-	return MQTT_CODE_SUCCESS;
-}
-
-void wolfSSL_Logging_cb_f(const int logLevel, const char * const logMessage) {
-	printf("[%d] - %s\r\n", logLevel, logMessage);
-}
-
-
-static void Wolfmqtt_PublishReceive(const char *host, int port) {
-	mqttNetwork.connect = MqttNetConnect;
-	mqttNetwork.disconnect = MqttNetDisconnect;
-	mqttNetwork.write = MqttNetWrite;
-	mqttNetwork.read = MqttNetRead;
-	mqttNetwork.context = &mqttContext;
-
-	int rc = 0;
-
-	rc = MqttClient_Init(&mqttClient, &mqttNetwork, mqttclient_message_cb,
-			tx_buf, MAX_BUFFER_SIZE, rx_buf, MAX_BUFFER_SIZE, 10000);
-	printf("MQTT Init: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc), rc);
-
-	rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 10000, 0,
-	NULL);
-	printf("MQTT NetConnect: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc),
-			rc);
-	uint32_t connectedMs = HAL_GetTick();
-
-	MqttConnect conn;
-	XMEMSET(&conn, 0, sizeof(MqttConnect));
-
-	conn.clean_session = 1;
-	conn.keep_alive_sec = 30;
-	conn.client_id = "test-client-id-device";
-	conn.enable_lwt = 0;
-
-	rc = MqttClient_Connect(&mqttClient, &conn);
-	printf("MQTT Connect: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc), rc);
-	printf("\tMQTT Connect Ack: Return Code %u, Session Present %d\r\n",
-			conn.ack.return_code,
-			(conn.ack.flags & MQTT_CONNECT_ACK_FLAG_SESSION_PRESENT) ? 1 : 0);
-
-	MqttSubscribe sub;
-	XMEMSET(&sub, 0, sizeof(MqttSubscribe));
-
-	MqttTopic top[] = { { "zksh/devices/first", 0 } };
-	sub.topics = top;
-	sub.topic_count = 1;
-
-	rc = MqttClient_Subscribe(&mqttClient, &sub);
-	printf("MQTT Subscribe: %s (%d)\r\n", MqttClient_ReturnCodeToString(rc),
-			rc);
-
-	MqttPublish publish;
-	XMEMSET(&publish, 0, sizeof(MqttPublish));
-
-	publish.retain = 0;
-	publish.qos = MQTT_QOS_0;
-	publish.duplicate = 0;
-	publish.topic_name = "zksh/devices/second";
-	publish.packet_id = packetId++;
-	publish.buffer = (byte*) "devicetest";
-	publish.total_len = (word16) XSTRLEN("devicetest");
-	rc = MqttClient_Publish(&mqttClient, &publish);
-
-	printf("MQTT Publish: Topic %s, %s (%d)\r\n", publish.topic_name,
-			MqttClient_ReturnCodeToString(rc), rc);
-
-	while (1) {
-		rc = MqttClient_WaitMessage(&mqttClient, 5000);
-		uint32_t connectionAge = HAL_GetTick() - connectedMs;
-
-		MqttClient_Ping(&mqttClient);
-		BSP_LED_Toggle(LED_GREEN);
-	}
-}
-
-static int Wolfssl_TlsConnect(const char *host, int port) {
-	WOLFSSL *ssl;
-	WOLFSSL_CTX *ctx;
-
-	wolfSSL_Init();
-
-	if ((ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method())) == NULL) {
-		return -1;
-	}
-
-	wolfSSL_SetIORecv(ctx, WolfsslReadCallback);
-	wolfSSL_SetIOSend(ctx, WolfsslWriteCallback);
-
-	int rc;
-	if ((rc = wolfSSL_CTX_load_verify_buffer(ctx, PUBLIC_KEY, PUBLIC_KEY_SIZE,
-			WOLFSSL_FILETYPE_ASN1)) != WOLFSSL_SUCCESS) {
-		return rc;
-	}
-
-	if ((ssl = wolfSSL_new(ctx)) == NULL) {
-		return -3;
-	}
-
-	wolfSSL_SetIOReadCtx(ssl, &mqttContext);
-	wolfSSL_SetIOWriteCtx(ssl, &mqttContext);
-
-	wolfSSL_set_verify(ssl, WOLFSSL_VERIFY_NONE, NULL);
-	wolfSSL_CTX_set_verify(ssl, WOLFSSL_VERIFY_NONE, NULL);
-
-	uint8_t destIp[4];
-	if (WIFI_GetHostAddress((char*) host, destIp) != WIFI_STATUS_OK) {
-		printf("FAIL DNS\r\n");
-		return -4;
-	}
-
-	if (WIFI_OpenClientConnection(mqttContext.id, WIFI_TCP_PROTOCOL,
-			"TCP_CLIENT", destIp, port, DEFAULT_TIMEOUT) != WIFI_STATUS_OK) {
-		return -5;
-	}
-
-	int resCode = wolfSSL_connect(ssl);
-	printf("wolfSSL_connect() - RS: %d\r\n", resCode);
-	if (resCode != SSL_SUCCESS) {
-		return -6;
-	}
-
-	wolfSSL_free(ssl); /* Free the wolfSSL object                  */
-	wolfSSL_CTX_free(ctx); /* Free the wolfSSL context object          */
-	wolfSSL_Cleanup(); /* Cleanup the wolfSSL environment          */
-	WIFI_CloseClientConnection(mqttContext.id); /* Close the connection to the server       */
-
-	return 0;
 }
 
 /**
