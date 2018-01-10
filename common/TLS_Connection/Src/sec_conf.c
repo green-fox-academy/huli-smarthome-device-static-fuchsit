@@ -1,6 +1,5 @@
 #include "main.h"
 
-#include "wolfmqtt/mqtt_client.h"
 #include "stdio.h"
 #include "sec_conf.h"
 

@@ -89,8 +89,6 @@ MqttClient mqttClient;
 MqttNet mqttNetwork;
 
 
-
-
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 
@@ -109,8 +107,6 @@ unsigned int custom_rand_generate(void) {
 	printf("Custom RNG invoked!\r\n");
 	return HAL_RNG_GetRandomNumber(&rngHandle) >> 24;
 }
-
-
 
 /**
  * @brief  Main program
