@@ -27,6 +27,8 @@ typedef struct WolfSocketContext {
 	uint32_t id;
 } WolfSocketContext;
 
+
+
 int WolfsslReadCallback(WOLFSSL* ssl, char* buf, int sz, void* context);
 int WolfsslWriteCallback(WOLFSSL* ssl, char* buf, int sz, void* context);
 static int Wolfssl_TlsConnect(const char *host, int port);

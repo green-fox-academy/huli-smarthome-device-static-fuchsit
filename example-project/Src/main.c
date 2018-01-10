@@ -91,8 +91,7 @@ MqttClient mqttClient;
 MqttNet mqttNetwork;
 
 
-static uint8_t tx_buf[MAX_BUFFER_SIZE];
-static uint8_t rx_buf[MAX_BUFFER_SIZE];
+
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
