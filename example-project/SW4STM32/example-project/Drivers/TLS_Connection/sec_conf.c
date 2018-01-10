@@ -1,12 +1,6 @@
-#include <sec_conf.h>
-#include <wolfmqtt/mqtt_client.h>
 #include "stdio.h"
-#include <wolfssl/options.h>
-#include <wolfssl/ssl.h>
-#include <wolfssl/certs_test.h>
-#include <wolfssl/wolfio.h>
-#include <wolfssl_net.h>
-#include "main.h"
+#include "sec_conf.h"
+
 
 WolfSocketContext mqttContext = { 0 };
 

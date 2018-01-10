@@ -43,8 +43,8 @@
 									<listOptionValue builtIn="false" value="../../../../../../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfmqtt-0.14.0"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfssl-3.13.0"/>
-									<listOptionValue builtIn="false" value="../../../../common/WiFi/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../common/TLS_Connection/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/WiFi/Inc"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1221693363" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32L475xx"/>
@@ -80,13 +80,30 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="fr.ac6.managedbuild.config.gnu.cross.exe.debug.409441534.1481953967" name="main.c" rcbsApplicability="disable" resourcePath="Example/User/main.c" toolsToInvoke="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039.126448325">
-						<tool id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039.126448325" name="MCU GCC Compiler" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039"/>
-						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.217472240" name="Resource Custom Build Step">
-							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.601858836" name="Resource Custom Build Step Input Type">
+					<fileInfo id="fr.ac6.managedbuild.config.gnu.cross.exe.debug.409441534.189430141" name="main.c" rcbsApplicability="disable" resourcePath="Example/User/main.c" toolsToInvoke="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039.1452174470">
+						<tool id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039.1452174470" name="MCU GCC Compiler" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.330920039">
+							<option id="gnu.c.compiler.option.include.paths.500064628" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+								<listOptionValue builtIn="false" value="../../../Inc"/>
+								<listOptionValue builtIn="false" value="../../../../common/TLS_Connection/Inc"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/CMSIS/Device/ST/STM32L4xx/Include"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/STM32L4xx_HAL_Driver/Inc"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/B-L475E-IOT01"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/Components/Common"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/Components/stmpe1600"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/Components/stmpe811"/>
+								<listOptionValue builtIn="false" value="../../../../../../Drivers/CMSIS/Include"/>
+								<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfmqtt-0.14.0"/>
+								<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfssl-3.13.0"/>
+								<listOptionValue builtIn="false" value="../../../../common/WiFi/Inc"/>
+							</option>
+							<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c.1213668821" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.c"/>
+							<inputType id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s.17910258" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.input.s"/>
+						</tool>
+						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1429128892" name="Resource Custom Build Step">
+							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.511389583" name="Resource Custom Build Step Input Type">
 								<additionalInput kind="additionalinputdependency" paths=""/>
 							</inputType>
-							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.968955442" name="Resource Custom Build Step Output Type"/>
+							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1762680811" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
 					<sourceEntries>

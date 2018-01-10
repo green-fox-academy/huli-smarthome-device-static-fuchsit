@@ -38,9 +38,8 @@
 #define PRINTF printf
 
 #include "main.h"
-#include "wolfmqtt/mqtt_client.h"
 #include "stdio.h"
-#include "sec_conf.h"
+
 
 // 0 = MQTT example, 1 = TLS example
 #define EXAMPLE_KIND	1
@@ -90,6 +89,7 @@ word16 packetId = 0;
 
 MqttClient mqttClient;
 MqttNet mqttNetwork;
+
 
 static uint8_t tx_buf[MAX_BUFFER_SIZE];
 static uint8_t rx_buf[MAX_BUFFER_SIZE];

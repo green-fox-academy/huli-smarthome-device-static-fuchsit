@@ -44,6 +44,7 @@
 #include "stm32l4xx_hal.h"
 #include "stm32l475e_iot01.h"
 #include "wifi.h"
+#include "sec_conf.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
