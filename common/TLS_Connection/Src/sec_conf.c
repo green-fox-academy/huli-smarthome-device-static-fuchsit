@@ -2,7 +2,7 @@
 
 #include "wolfmqtt/mqtt_client.h"
 #include "stdio.h"
-#include "../Inc/sec_conf.h"
+#include "sec_conf.h"
 
 WolfSocketContext mqttContext = { 0 };
 
@@ -69,7 +69,7 @@ void wolfSSL_Logging_cb_f(const int logLevel, const char * const logMessage) {
 	printf("[%d] - %s\r\n", logLevel, logMessage);
 }
 
-static int Wolfssl_TlsConnect(const char *host, int port) {
+int Wolfssl_TlsConnect(const char *host, int port) {
 	WOLFSSL *ssl;
 	WOLFSSL_CTX *ctx;
 

@@ -31,7 +31,7 @@ typedef struct WolfSocketContext {
 
 int WolfsslReadCallback(WOLFSSL* ssl, char* buf, int sz, void* context);
 int WolfsslWriteCallback(WOLFSSL* ssl, char* buf, int sz, void* context);
-static int Wolfssl_TlsConnect(const char *host, int port); //cant see the .c file
+int Wolfssl_TlsConnect(const char *host, int port);
 void wolfSSL_Logging_cb_f(const int logLevel, const char * const logMessage);
 
 #ifdef __cplusplus

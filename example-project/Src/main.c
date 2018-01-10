@@ -133,8 +133,7 @@ int main(void) {
 	}
 
 	if (EXAMPLE_KIND) {
-		//static int Wolfssl_TlsConnect(const char *host, int port)
-		int res = Wolfssl_TlsConnect("mqtt.googleapis.com", 8883); //cant see the conf file
+		int res = Wolfssl_TlsConnect("mqtt.googleapis.com", 8883);
 		printf("---- TLS RESULT: %d ----\r\n", res);
 	} else {
 		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
