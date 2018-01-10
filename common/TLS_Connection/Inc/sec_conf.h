@@ -21,8 +21,7 @@
 #include <wolfssl/certs_test.h>
 #include <wolfssl/wolfio.h>
 #include <wolfssl_net.h>
-
-#include "wifi.h"
+#include <wifi.h>
 
 typedef struct WolfSocketContext {
 	uint32_t id;
