@@ -3,6 +3,8 @@
 #ifndef WOLFSSL_USER_SETTINGS_H
 #define WOLFSSL_USER_SETTINGS_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,7 +15,7 @@ extern "C" {
 #undef  WOLFSSL_GENERAL_ALIGNMENT
 #define WOLFSSL_GENERAL_ALIGNMENT   4
 
-#define XTIME(tl)       custom_time((tl))
+#define XTIME(tl)       net_CustomTimestampCallback((tl))
 
 #undef  SINGLE_THREADED
 #define SINGLE_THREADED
@@ -285,7 +287,7 @@ extern "C" {
 /* RNG */
 /* ------------------------------------------------------------------------- */
 /* Size of returned HW RNG value */
-#define CUSTOM_RAND_TYPE      unsigned int
+#define CUSTOM_RAND_TYPE      uint32_t
 
 /* Choose RNG method */
 #if 1
@@ -294,9 +296,9 @@ extern "C" {
     #undef  HAVE_HASHDRBG
     #define HAVE_HASHDRBG
 
-    extern unsigned int custom_rand_generate(void);
+    extern uint32_t net_CustomRandomCallback(void);
     #undef  CUSTOM_RAND_GENERATE
-    #define CUSTOM_RAND_GENERATE  custom_rand_generate
+    #define CUSTOM_RAND_GENERATE  net_CustomRandomCallback
 #else
     /* Bypass P-RNG and use only HW RNG */
     extern int custom_rand_generate_block(unsigned char* output, unsigned int sz);
@@ -321,7 +323,7 @@ extern "C" {
 #define HAVE_SUPPORTED_CURVES
 
 #undef  WOLFSSL_BASE64_ENCODE
-//#define WOLFSSL_BASE64_ENCODE
+#define WOLFSSL_BASE64_ENCODE
 
 /* TLS Session Cache */
 #if 0

@@ -43,7 +43,13 @@
 									<listOptionValue builtIn="false" value="../../../../../../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfmqtt-0.14.0"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfssl-3.13.0"/>
+									<listOptionValue builtIn="false" value="../../../../common/RTCUtils/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../common/WiFi/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/NTP/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/NetSecure/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/MQTT/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/GoogleIOT/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../common/LOG/Inc"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1221693363" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32L475xx"/>
