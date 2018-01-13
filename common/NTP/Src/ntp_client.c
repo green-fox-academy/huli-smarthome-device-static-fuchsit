@@ -21,7 +21,8 @@ int NTPClient_GetTimeSeconds(uint32_t *result) {
 	ntp_packet packet = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	packet.li_vn_mode = 0x1b; // 00,011,011 for li = 0, vn = 3, and mode = 3
 
-	NetTransportContext ctx = { 1 };
+	NetTransportContext ctx;
+	ctx.connection.id = 1;
 
 	int rc = net_Connect(&ctx, SOCKET_UDP, ntp_client_NTPServerHost,
 			ntp_client_NTPServerPort, NTP_DEFAULT_TIMEOUT);
@@ -34,6 +35,7 @@ int NTPClient_GetTimeSeconds(uint32_t *result) {
 	rc = net_Send(&ctx, (char*) &packet, sizeof(ntp_packet),
 			NTP_DEFAULT_TIMEOUT);
 	if (rc < 0) {
+		net_Disconnect(&ctx);
 		NTP_MSG("NTP send request error");
 		NTP_EXIT("NTPClient_GetTimeSeconds", rc, 1);
 		return rc;
@@ -42,6 +44,7 @@ int NTPClient_GetTimeSeconds(uint32_t *result) {
 	rc = net_Receive(&ctx, (char*) &packet, sizeof(ntp_packet),
 			NTP_DEFAULT_TIMEOUT);
 	if (rc < 0) {
+		net_Disconnect(&ctx);
 		NTP_MSG("NTP response receive error");
 		NTP_EXIT("NTPClient_GetTimeSeconds", rc, 1);
 		return rc;

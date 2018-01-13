@@ -44,9 +44,8 @@
 #include "ntp_client.h"
 #include "rtc_utils.h"
 
-
 // 0 = MQTT example, 1 = TLS example
-#define EXAMPLE_KIND	EXAMPLE_MQTT
+#define EXAMPLE_KIND	EXAMPLE_HTTPS_SERVER
 #define NEED_WIFI		1
 
 #ifdef __GNUC__
@@ -67,14 +66,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 
-typedef struct WolfSocketContext {
-	uint32_t id;
-} WolfSocketContext;
-
 uint32_t socketId = 0;
 
 typedef enum ExampleKind {
-	EXAMPLE_MQTT, EXAMPLE_TLS
+	EXAMPLE_MQTT, EXAMPLE_HTTPS_SERVER
 } ExampleKind;
 
 /* Private define ------------------------------------------------------------*/
@@ -86,6 +81,10 @@ typedef enum ExampleKind {
 //#define PASSWORD "Buzi3vagy"
 //#define SSID		"Doctusoft"
 //#define PASSWORD	"KTvEqa4bz2"
+//#define SSID		"DS-Guests"
+//#define PASSWORD	"DsG-2016"
+//#define SSID		"Zoltán Kauker's iPhone"
+//#define PASSWORD	"password11"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -106,8 +105,9 @@ uint8_t IP_Addr[4];
 WOLFSSL *ssl;
 WOLFSSL_CTX *ctx;
 
-WolfSocketContext mqttContext = { 0 };
-NetTransportContext netContext = { 0 };
+NetTransportContext netContext;
+
+volatile int tryConnect = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -124,8 +124,33 @@ int MQTT_MessageArrivedCallback(const char* topic, const char* message) {
 	return 0;
 }
 
+int HandleClientCallback(NetTransportContext *ctx) {
+	char buff[512];
+	int rc = net_TLSReceive(ctx, buff, 512, 2000);
+	if (rc < 0) {
+		printf("ERROR: could not receive data: %d\r\n", rc);
+		return 0;
+	}
+	char snd[] =
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"test_value\"}";
+	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
+		printf("ERROR: could not send response: %d\r\n", rc);
+		return 0;
+	}
+	return 0;
+}
+
 void wolfSSL_Logging_cb_f(const int logLevel, const char * const logMessage) {
 	printf("ssl > [%d] - %s\r\n", logLevel, logMessage);
+}
+
+void HTTPSServerStart() {
+	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
+	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
+	if (rc != 0) {
+		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
+		return;
+	}
 }
 
 static void Wolfmqtt_PublishReceive(const char *host, int port) {
@@ -143,47 +168,6 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 	GGL_MQTT_Disconnect();
 }
 
-static int Wolfssl_TlsConnect(const char *host, int port) {
-
-	if ((ctx = wolfSSL_CTX_new(wolfTLSv1_2_client_method())) == NULL) {
-		return -1;
-	}
-
-	//wolfSSL_SetIORecv(ctx, WolfsslReadCallback);
-	//wolfSSL_SetIOSend(ctx, WolfsslWriteCallback);
-
-	if ((ssl = wolfSSL_new(ctx)) == NULL) {
-		return -3;
-	}
-
-	wolfSSL_SetIOReadCtx(ssl, &mqttContext);
-	wolfSSL_SetIOWriteCtx(ssl, &mqttContext);
-
-	uint8_t destIp[4];
-	if (WIFI_GetHostAddress((char*) host, destIp) != WIFI_STATUS_OK) {
-		printf("FAIL DNS\r\n");
-		return -4;
-	}
-
-	if (WIFI_OpenClientConnection(mqttContext.id, WIFI_TCP_PROTOCOL,
-			"TCP_CLIENT", destIp, port, DEFAULT_TIMEOUT) != WIFI_STATUS_OK) {
-		return -5;
-	}
-
-	int resCode = wolfSSL_connect(ssl);
-	printf("wolfSSL_connect() - RS: %d\r\n", resCode);
-	if (resCode != SSL_SUCCESS) {
-		return -6;
-	}
-
-	wolfSSL_free(ssl); /* Free the wolfSSL object                  */
-	wolfSSL_CTX_free(ctx); /* Free the wolfSSL context object          */
-	wolfSSL_Cleanup(); /* Cleanup the wolfSSL environment          */
-	WIFI_CloseClientConnection(mqttContext.id); /* Close the connection to the server       */
-
-	return 0;
-}
-
 /**
  * @brief  Main program
  * @param  None
@@ -196,21 +180,9 @@ int main(void) {
 
 	WIFI_GoOnline();
 
-	NTPClient_Init("hu.pool.ntp.org", 123);
-	uint32_t ntpTimestamp;
-	int rc;
-	if ((rc = NTPClient_GetTimeSeconds(&ntpTimestamp)) != 0) {
-		printf("ERROR: could not get NTP timestamp\r\n");
-	}
-
-	printf("NTP timestamp is: %lu\r\n", ntpTimestamp);
-	RTCUtils_SetEpochTimestamp(ntpTimestamp);
-
-	int res;
 	switch (EXAMPLE_KIND) {
-	case EXAMPLE_TLS:
-		res = Wolfssl_TlsConnect("mqtt.googleapis.com", 8883);
-		printf("---- TLS RESULT: %d ----\r\n", res);
+	case EXAMPLE_HTTPS_SERVER:
+		HTTPSServerStart();
 		break;
 	case EXAMPLE_MQTT:
 		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
@@ -220,24 +192,51 @@ int main(void) {
 }
 
 static void WIFI_GoOnline(void) {
-	if (WIFI_Connect(SSID, PASSWORD, WIFI_ECN_WPA2_PSK) != WIFI_STATUS_OK) {
-		printf(
-				"ERROR: Couldn't connect to WiFi network %s with password %s\r\n",
-				SSID, PASSWORD);
-		while (1) {
+	uint8_t online = 0;
+	uint32_t tryCount = 1;
+	tryConnect = 1;
+	while (online == 0) {
+		if (!tryConnect) {
+			continue;
 		}
+		printf("Trying to connect to AP %s\r\n", SSID);
+		if (WIFI_Connect(SSID, PASSWORD, WIFI_ECN_WPA2_PSK) != WIFI_STATUS_OK) {
+			printf(
+					"ERROR: Couldn't connect to WiFi network %s. Try count: %lu\r\n",
+					SSID, tryCount);
+		}
+		else {
+			online = 1;
+		}
+		tryConnect = 0;
+		tryCount++;
 	}
 
 	if (WIFI_GetIP_Address(IP_Addr) == WIFI_STATUS_OK) {
 		printf("WiFi successfully joined with IP address: %d.%d.%d.%d\r\n",
 				IP_Addr[0], IP_Addr[1], IP_Addr[2], IP_Addr[3]);
-	} else {
-		printf(
-				"ERROR: Couldn't get IP address on network %s with password %s\r\n",
-				SSID, PASSWORD);
-		while (1) {
-		}
 	}
+
+	tryConnect = 1;
+	int rtcSet = 0;
+	uint32_t rtcCount = 1;
+	while (rtcSet == 0) {
+		if (!tryConnect) {
+			continue;
+		}
+		printf("Trying to set the RTC clock from NTP\r\n");
+		uint32_t ntpResult = 0;
+		if (NTPClient_GetTimeSeconds(&ntpResult) != 0) {
+			printf("ERROR: could not query NTP time\r\n");
+		}
+		else {
+			RTCUtils_SetEpochTimestamp(ntpResult);
+			rtcSet = 1;
+		}
+		tryConnect = 0;
+		rtcCount++;
+	}
+
 }
 
 static void SW_STACK_Init() {
@@ -245,6 +244,7 @@ static void SW_STACK_Init() {
 	SHOME_DebugEnable();
 
 	// initialize network layer (WiFi in our case)
+	netContext.connection.id = 0;
 	net_Init(&netContext);
 
 	secConfig.rngHandle = &rngHandle;
@@ -272,6 +272,8 @@ static void SW_STACK_Init() {
 	gglConfig.device = device;
 	gglConfig.network = network;
 	GGL_IOT_Init(&gglConfig);
+
+	NTPClient_Init("hu.pool.ntp.org", 123);
 }
 
 static void Peripherals_Init(void) {
@@ -293,10 +295,19 @@ static void Peripherals_Init(void) {
 
 	RNG_Init();
 
+	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 	BSP_LED_Init(LED_GREEN);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();
+}
+
+void EXTI15_10_IRQHandler() {
+	HAL_GPIO_EXTI_IRQHandler(USER_BUTTON_PIN);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	tryConnect = 1;
 }
 
 static void RNG_Init(void) {

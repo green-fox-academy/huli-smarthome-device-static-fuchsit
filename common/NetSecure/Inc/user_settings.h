@@ -15,6 +15,8 @@ extern "C" {
 #undef  WOLFSSL_GENERAL_ALIGNMENT
 #define WOLFSSL_GENERAL_ALIGNMENT   4
 
+#define WOLFSSL_SESSION_TIMEOUT		5
+
 #define XTIME(tl)       net_CustomTimestampCallback((tl))
 
 #undef  SINGLE_THREADED
