@@ -33,10 +33,6 @@ void SHOME_LogMsg(const char *fmt, ...) {
 	}
 	va_list args;
 	va_start(args, fmt);
-	//char buff[512];
-	//vsprintf(buff, fmt, args);
-	//va_end(args);
-
 	vprintf(fmt, args);
 	va_end(args);
 }

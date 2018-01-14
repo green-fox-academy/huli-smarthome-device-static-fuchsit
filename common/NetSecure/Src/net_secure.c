@@ -1,12 +1,12 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "wolfssl/wolfcrypt/logging.h"
 #include "user_settings.h"
 #include "net_transport.h"
 #include "net_secure.h"
 #include "rtc_utils.h"
 #include "smarthome_log.h"
-#include "device_keys.h"
 
 #define NET_SECURE_DEFAULT_TIMEOUT		5000
 
@@ -17,13 +17,47 @@
 int WolfSSL_IORecvCallback(WOLFSSL *ssl, char *buf, int sz, void *ctx);
 int WolfSSL_IOSendCallback(WOLFSSL *ssl, char *buf, int sz, void *ctx);
 
-RNG_HandleTypeDef *net_secure_rngHandle;
+NetSecure_InitTypeDef *net_secure_config;
 NetHandleClientConnectionCallback net_secure_HandleClientConnectionCallback;
 
 int net_TLSNetHandleClientConnectionCallbackWrapper(NetTransportContext *ctx);
 
+void wolfSSL_LoggingCallback(const int logLevel, const char * const logMessage) {
+	if (!net_secure_config->debugEnable) {
+		return;
+	}
+	char* logLevelStr;
+	switch (logLevel) {
+	case (ERROR_LOG):
+		logLevelStr = "ERROR";
+		break;
+	case (INFO_LOG):
+		logLevelStr = "INFO";
+		break;
+	case (ENTER_LOG):
+		logLevelStr = "ENTER";
+		break;
+	case (LEAVE_LOG):
+		logLevelStr = "EXIT";
+		break;
+	case (OTHER_LOG):
+		logLevelStr = "OTHER";
+		break;
+	default:
+		logLevelStr = "UNKNOWN";
+	}
+	NETS_MSG("wolfssl > [%s] %s\r\n", logLevelStr, logMessage);
+}
+
 void net_SecureInit(NetSecure_InitTypeDef *netSecureInit) {
-	net_secure_rngHandle = netSecureInit->rngHandle;
+	NETS_ENTER("net_SecureInit");
+	net_secure_config = netSecureInit;
+	wolfSSL_Init();
+	if (netSecureInit->debugEnable) {
+		wolfSSL_SetLoggingCb(wolfSSL_LoggingCallback);
+		wolfSSL_Debugging_ON();
+	}
+	NETS_EXIT("net_SecureInit", 0, 0);
 }
 
 time_t net_CustomTimestampCallback(time_t x) {
@@ -31,7 +65,7 @@ time_t net_CustomTimestampCallback(time_t x) {
 }
 
 uint32_t net_CustomRandomCallback(void) {
-	return HAL_RNG_GetRandomNumber(net_secure_rngHandle);
+	return HAL_RNG_GetRandomNumber(net_secure_config->rngHandle);
 }
 
 int net_TLSConnect(NetTransportContext *ctx, SocketType sockType,
@@ -69,6 +103,7 @@ int net_TLSConnectIp(NetTransportContext *ctx, SocketType sockType,
 
 	wolfSSL_SetIORecv(ctx->sslCtx, WolfSSL_IORecvCallback);
 	wolfSSL_SetIOSend(ctx->sslCtx, WolfSSL_IOSendCallback);
+	wolfSSL_CTX_set_verify(ctx->sslCtx, WOLFSSL_VERIFY_NONE, NULL);
 
 	if ((ctx->ssl = wolfSSL_new(ctx->sslCtx)) == NULL) {
 		NETS_MSG("wolfSSL_new failed\r\n");
@@ -78,6 +113,7 @@ int net_TLSConnectIp(NetTransportContext *ctx, SocketType sockType,
 
 	wolfSSL_SetIOReadCtx(ctx->ssl, ctx);
 	wolfSSL_SetIOWriteCtx(ctx->ssl, ctx);
+	wolfSSL_set_verify(ctx->ssl, WOLFSSL_VERIFY_NONE, NULL);
 
 	int rc = net_ConnectIp(ctx, sockType, targetIp, port, timeoutMs);
 	if (rc != RC_SUCCESS) {

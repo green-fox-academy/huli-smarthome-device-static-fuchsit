@@ -7,7 +7,7 @@
 #include "wolfssl/wolfcrypt/signature.h"
 #include "wolfssl/wolfcrypt/rsa.h"
 #include "rtc_utils.h"
-#include "device_keys.h"
+#include "net_settings.h"
 
 #define GGL_ENTER(fnc)				SHOME_LogEnter("ggl", fnc)
 #define GGL_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
@@ -56,6 +56,10 @@ int GGL_IOT_MQTT_MessageArrivedCallback(struct _MqttClient *client,
 	}
 	GGL_EXIT("GGL_IOT_MQTT_MessageArrivedCallback", 0, 0);
 	return 0;
+}
+
+int GGL_MQTT_WaitForMessage(uint32_t timeout) {
+	return MqttClient_WaitMessage(&mqttClient, timeout);
 }
 
 int GGL_MQTT_Connect() {
@@ -145,7 +149,7 @@ int GGL_MQTT_Subscribe(const char* topicName) {
 	char topicNameBuf[256];
 	GGL_MQTT_CreateTopicName(topicName, topicNameBuf);
 
-	MqttTopic top[] = { { topicNameBuf, 0 } };
+	MqttTopic top[] = { { topicNameBuf, 1 } };
 	sub.topics = top;
 	sub.topic_count = 1;
 

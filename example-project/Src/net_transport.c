@@ -230,9 +230,9 @@ int net_Receive(NetTransportContext *ctx, const char* buffer,
 		NET_EXIT("net_Receive", RC_SUCCESS, 0);
 		return totalReceived;
 	}
-	if (rc == RC_TIMEOUT && totalReceived > 0) {
+	if (rc == RC_TIMEOUT && totalReceived >= 0) {
 		NET_MSG(
-				"WARNING: timeout, but already have some data, returning the read amount\r\n");
+				"WARNING: timeout, data size in read buffer: %d\r\n", totalReceived);
 		NET_EXIT("net_Receive", RC_SUCCESS, 0);
 		return totalReceived;
 	}

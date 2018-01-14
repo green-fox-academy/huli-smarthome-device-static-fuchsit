@@ -45,7 +45,7 @@
 #include "rtc_utils.h"
 
 // 0 = MQTT example, 1 = TLS example
-#define EXAMPLE_KIND	EXAMPLE_HTTPS_SERVER
+#define EXAMPLE_KIND	EXAMPLE_MQTT
 #define NEED_WIFI		1
 
 #ifdef __GNUC__
@@ -67,9 +67,10 @@
 /* Private typedef -----------------------------------------------------------*/
 
 uint32_t socketId = 0;
+const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
 typedef enum ExampleKind {
-	EXAMPLE_MQTT, EXAMPLE_HTTPS_SERVER
+	EXAMPLE_MQTT, EXAMPLE_HTTPS_REST,
 } ExampleKind;
 
 /* Private define ------------------------------------------------------------*/
@@ -77,14 +78,6 @@ typedef enum ExampleKind {
 #define PASSWORD "ideahelysegben"
 //#define SSID     "A66 Guest"
 //#define PASSWORD "Hello123"
-//#define SSID     "AndroidAP"
-//#define PASSWORD "Buzi3vagy"
-//#define SSID		"Doctusoft"
-//#define PASSWORD	"KTvEqa4bz2"
-//#define SSID		"DS-Guests"
-//#define PASSWORD	"DsG-2016"
-//#define SSID		"Zoltán Kauker's iPhone"
-//#define PASSWORD	"password11"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -95,15 +88,6 @@ NetSecure_InitTypeDef secConfig;
 
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
-
-/**
- * MQTT configuration
- */
-#define DEFAULT_TIMEOUT			1000
-#define MAX_BUFFER_SIZE         512
-
-WOLFSSL *ssl;
-WOLFSSL_CTX *ctx;
 
 NetTransportContext netContext;
 
@@ -120,7 +104,7 @@ static void RNG_Init(void);
 static void WIFI_GoOnline(void);
 
 int MQTT_MessageArrivedCallback(const char* topic, const char* message) {
-	printf("Message arrived in topic: %s\r\nMessage:%s", topic, message);
+	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
 	return 0;
 }
 
@@ -140,10 +124,6 @@ int HandleClientCallback(NetTransportContext *ctx) {
 	return 0;
 }
 
-void wolfSSL_Logging_cb_f(const int logLevel, const char * const logMessage) {
-	printf("ssl > [%d] - %s\r\n", logLevel, logMessage);
-}
-
 void HTTPSServerStart() {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
@@ -154,15 +134,32 @@ void HTTPSServerStart() {
 }
 
 static void Wolfmqtt_PublishReceive(const char *host, int port) {
-
-	GGL_MQTT_Connect();
-	GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}");
-
-	GGL_MQTT_Subscribe("state");
-
+	int rc;
+	if ((rc = GGL_MQTT_Connect()) != RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Connect FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+		return;
+	}
+	if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+		return;
+	}
+	if ((rc = GGL_MQTT_Subscribe("config")) != RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Subscribe FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+		return;
+	}
 	while (1) {
-		GGL_MQTT_Ping();
-		HAL_Delay(10000);
+		if ((rc = GGL_MQTT_WaitForMessage(10000)) != RC_SUCCESS) {
+			printf("ERROR: GGL_MQTT_WaitForMessage FAILED %d - %s\r\n", rc,
+					MqttClient_ReturnCodeToString(rc));
+		}
+		if ((rc = GGL_MQTT_Ping()) != RC_SUCCESS) {
+			printf("ERROR: GGL_MQTT_Ping FAILED %d - %s\r\n", rc,
+					MqttClient_ReturnCodeToString(rc));
+		}
 	}
 
 	GGL_MQTT_Disconnect();
@@ -181,14 +178,13 @@ int main(void) {
 	WIFI_GoOnline();
 
 	switch (EXAMPLE_KIND) {
-	case EXAMPLE_HTTPS_SERVER:
+	case EXAMPLE_HTTPS_REST:
 		HTTPSServerStart();
 		break;
 	case EXAMPLE_MQTT:
 		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
 		break;
 	}
-
 }
 
 static void WIFI_GoOnline(void) {
@@ -204,8 +200,7 @@ static void WIFI_GoOnline(void) {
 			printf(
 					"ERROR: Couldn't connect to WiFi network %s. Try count: %lu\r\n",
 					SSID, tryCount);
-		}
-		else {
+		} else {
 			online = 1;
 		}
 		tryConnect = 0;
@@ -228,8 +223,7 @@ static void WIFI_GoOnline(void) {
 		uint32_t ntpResult = 0;
 		if (NTPClient_GetTimeSeconds(&ntpResult) != 0) {
 			printf("ERROR: could not query NTP time\r\n");
-		}
-		else {
+		} else {
 			RTCUtils_SetEpochTimestamp(ntpResult);
 			rtcSet = 1;
 		}
@@ -248,14 +242,8 @@ static void SW_STACK_Init() {
 	net_Init(&netContext);
 
 	secConfig.rngHandle = &rngHandle;
+	secConfig.debugEnable = 1;
 	net_SecureInit(&secConfig);
-
-	// initialize security layer (WolfSSL)
-	wolfSSL_Init();
-	wolfSSL_Debugging_ON();
-	wolfSSL_SetLoggingCb(wolfSSL_Logging_cb_f);
-	wolfSSL_set_verify(ssl, WOLFSSL_VERIFY_NONE, NULL);
-	wolfSSL_CTX_set_verify(ctx, WOLFSSL_VERIFY_NONE, NULL);
 
 	// initialize google stack
 	GGL_DeviceDef device;

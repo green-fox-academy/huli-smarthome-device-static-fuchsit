@@ -34,20 +34,22 @@ typedef struct
 
 } ntp_packet;              // Total: 384 bits or 48 bytes.
 
-/*! \brief      Initializes the NTP server host and port for later use
- *  \discussion
+/**
+ *  @brief      Initializes the NTP server host and port for later use
+ *  @discussion
  *
- *  \param      ntpHost    		the NTP host to use
- *  \param		ntpPort			the NTP port to use
+ *  @param      ntpHost    		the NTP host to use
+ *  @param		ntpPort			the NTP port to use
  */
 void NTPClient_Init(const char* ntpHost, uint16_t ntpPort);
 
-/*! \brief      Gets the current timestamp from the NTP server
- *  \discussion
+/**
+ *  @brief      Gets the current timestamp from the NTP server
+ *  @discussion
  *
- *  \param      result    		reference to the uint32_t in which the result will be stored
+ *  @param      result    		reference to the uint32_t in which the result will be stored
  *
- *  \return		result code, 0 on success
+ *  @return		result code, 0 on success
  */
 int NTPClient_GetTimeSeconds(uint32_t *result);
 
