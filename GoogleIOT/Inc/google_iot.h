@@ -2,12 +2,9 @@
 #define GOOGLE_IOT_H
 
 #include <stdint.h>
+#include "mqtt_net.h"
+#include "net_transport.h"
 #include "smarthome_log.h"
-
-/**
- * @brief      This method will be invoked when a new message arrives to a topic
- */
-typedef int (*GGL_IOT_MesssageArrivedCallback)(const char* topic, const char* message);
 
 /**
  *  @brief      This struct should contain all the network preferences which
@@ -16,6 +13,7 @@ typedef int (*GGL_IOT_MesssageArrivedCallback)(const char* topic, const char* me
 typedef struct __GGL_NetworkDef {
 	char* mqttHost;
 	uint16_t mqttPort;
+	NetConnectionContext mqttConnectionContext;
 } GGL_NetworkDef;
 
 /**
@@ -35,7 +33,7 @@ typedef struct __GGL_DeviceDef {
 typedef struct __GGL_InitDef {
 	GGL_NetworkDef network;
 	GGL_DeviceDef device;
-	GGL_IOT_MesssageArrivedCallback callback;
+	MQTT_MesssageArrivedCallback callback;
 } GGL_InitDef;
 
 /**
@@ -70,10 +68,11 @@ int GGL_MQTT_Disconnect();
  *  			subscription
  *
  *  @param		topicName	The name of the topic to subscribe
+ *  @param		qos			QoS of the subscription
  *
  *  @retval     result code, where the success is 0
  */
-int GGL_MQTT_Subscribe(const char* topicName);
+int GGL_MQTT_Subscribe(const char* topicName, MqttQoS qos);
 
 /**
  *  @brief      Waits for incoming message from the topics the client subscribed to

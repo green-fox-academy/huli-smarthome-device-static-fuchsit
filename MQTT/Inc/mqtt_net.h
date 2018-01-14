@@ -2,17 +2,28 @@
 #define MQTT_NET_H
 
 #include <stdint.h>
-#include "wolfmqtt/mqtt_types.h"
+#include "net_settings.h"
+#include "wolfmqtt/mqtt_client.h"
 
 #define MQTT_MAX_BUFFER_SIZE         	512
 #define MQTT_DEFAULT_TIMEOUT			5000
+
+/**
+ * @brief      This method will be invoked when a new message arrives to a topic
+ */
+typedef int (*MQTT_MesssageArrivedCallback)(const char* topic, const char* message);
+
+typedef struct MQTT_NetInitTypeDef {
+	MQTT_MesssageArrivedCallback callback;
+	NetConnectionContext ctx;
+} MQTT_NetInitTypeDef;
 
 /**
  * @brief		Initializes the WolfMQTT library
  *
  * @retval		WOLFMQTT_SUCCESS (0) or error code
  */
-int MQTT_Init();
+int MQTT_Init(MQTT_NetInitTypeDef *mqttConfig);
 
 /**
  * @brief		Generates a packet ID for QoS > 0. This function assumes that

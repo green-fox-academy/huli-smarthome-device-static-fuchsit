@@ -17,6 +17,8 @@ static GGL_InitDef *GGL_Config;
 
 extern MqttClient mqttClient;
 
+MQTT_NetInitTypeDef mqttNetInit;
+
 int GGL_JWT_Create(char *buffer, word32 bufferLen);
 int GGL_RS256_Sign(const char *dataBuff, char *signature, word32 signatureSize);
 
@@ -26,38 +28,6 @@ void GGL_IOT_Init(GGL_InitDef *config) {
 	GGL_EXIT("GGL_IOT_Init", 0, 0);
 }
 
-int GGL_IOT_MQTT_MessageArrivedCallback(struct _MqttClient *client,
-		MqttMessage *message, byte msg_new, byte msg_done) {
-	GGL_ENTER("GGL_IOT_MQTT_MessageArrivedCallback");
-
-	byte topicBuf[MQTT_MAX_BUFFER_SIZE + 1];
-	byte messageBuf[MQTT_MAX_BUFFER_SIZE + 1];
-
-	if (msg_new) {
-		XMEMCPY(topicBuf, message->topic_name, message->topic_name_len);
-		topicBuf[message->topic_name_len] = '\0';
-		GGL_MSG("Got MQTT message to topic: %s\r\n", topicBuf);
-	}
-
-	if (!msg_done) {
-		GGL_MSG(
-				"ERROR: MQTT message exceeds the maximum buffer size, which is not supported in this library.\r\n");
-		GGL_EXIT("GGL_IOT_MQTT_MessageArrivedCallback", -1, 1);
-		return -1;
-	}
-
-	XMEMCPY(messageBuf, message->buffer, message->buffer_len);
-	messageBuf[message->buffer_len] = '\0';
-	int rc = GGL_Config->callback((char*)topicBuf, (char*)messageBuf);
-	if (rc != 0) {
-		GGL_EXIT("GGL_IOT_MQTT_MessageArrivedCallback", rc, 1);
-		return rc;
-
-	}
-	GGL_EXIT("GGL_IOT_MQTT_MessageArrivedCallback", 0, 0);
-	return 0;
-}
-
 int GGL_MQTT_WaitForMessage(uint32_t timeout) {
 	return MqttClient_WaitMessage(&mqttClient, timeout);
 }
@@ -65,7 +35,10 @@ int GGL_MQTT_WaitForMessage(uint32_t timeout) {
 int GGL_MQTT_Connect() {
 	GGL_ENTER("GGL_MQTT_Connect");
 
-	int rc = MQTT_Init(GGL_IOT_MQTT_MessageArrivedCallback);
+	mqttNetInit.callback = GGL_Config->callback;
+	mqttNetInit.ctx = GGL_Config->network.mqttConnectionContext;
+
+	int rc = MQTT_Init(&mqttNetInit);
 
 	if (rc != MQTT_CODE_SUCCESS) {
 		GGL_MSG("ERROR: unsuccessful MQTT_Init %d=%s\r\n", rc,
@@ -141,7 +114,7 @@ void GGL_MQTT_CreateTopicName(const char* topicName, const char* topicNameBuf) {
 			GGL_Config->device.deviceId, topicName);
 }
 
-int GGL_MQTT_Subscribe(const char* topicName) {
+int GGL_MQTT_Subscribe(const char* topicName, MqttQoS qos) {
 	GGL_ENTER("GGL_MQTT_Subscribe");
 	MqttSubscribe sub;
 	XMEMSET(&sub, 0, sizeof(MqttSubscribe));
@@ -149,7 +122,7 @@ int GGL_MQTT_Subscribe(const char* topicName) {
 	char topicNameBuf[256];
 	GGL_MQTT_CreateTopicName(topicName, topicNameBuf);
 
-	MqttTopic top[] = { { topicNameBuf, 1 } };
+	MqttTopic top[] = { { topicNameBuf, qos } };
 	sub.topics = top;
 	sub.topic_count = 1;
 
