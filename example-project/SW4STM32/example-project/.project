@@ -31,6 +31,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/readme.txt</locationURI>
 		</link>
 		<link>
+			<name>Example/Src</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
 			<name>Drivers/CMSIS/system_stm32l4xx.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/system_stm32l4xx.c</locationURI>
@@ -339,6 +344,21 @@
 			<name>Example/SW4STM32/syscalls.c</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/syscalls.c</locationURI>
+		</link>
+		<link>
+			<name>Example/Src/es_wifi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/Common/WiFi/Src/es_wifi.c</locationURI>
+		</link>
+		<link>
+			<name>Example/Src/es_wifi_io.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/Common/WiFi/Src/es_wifi_io.c</locationURI>
+		</link>
+		<link>
+			<name>Example/Src/wifi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/Common/WiFi/Src/wifi.c</locationURI>
 		</link>
 		<link>
 			<name>Example/User/main.c</name>

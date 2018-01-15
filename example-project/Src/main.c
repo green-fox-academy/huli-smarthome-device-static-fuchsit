@@ -74,9 +74,9 @@ int main(void) {
 	Peripherals_Init();
 
 	while (1) {
-		printf("Leddy-toggly\r\n");
+		printf("`Leddy-toggly\r\n");
 		BSP_LED_Toggle(LED_GREEN);
-		HAL_Delay(1000);
+		HAL_Delay(500);
 	}
 }
 
