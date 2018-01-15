@@ -39,13 +39,13 @@
 #include "wolfssl/wolfcrypt/logging.h"
 #include "wifi.h"
 #include "net_transport.h"
+#include "mqtt_net.h"
 #include "net_secure.h"
 #include "google_iot.h"
 #include "ntp_client.h"
 #include "rtc_utils.h"
 
-// 0 = MQTT example, 1 = TLS example
-#define EXAMPLE_KIND	EXAMPLE_MQTT
+#define EXAMPLE_KIND	EXAMPLE_SIMPLE_MQTT
 #define NEED_WIFI		1
 
 #ifdef __GNUC__
@@ -70,7 +70,7 @@ uint32_t socketId = 0;
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
 typedef enum ExampleKind {
-	EXAMPLE_MQTT, EXAMPLE_HTTPS_REST,
+	EXAMPLE_SIMPLE_MQTT, EXAMPLE_MQTT, EXAMPLE_HTTPS_REST,
 } ExampleKind;
 
 /* Private define ------------------------------------------------------------*/
@@ -85,9 +85,12 @@ UART_HandleTypeDef uartHandle;
 RNG_HandleTypeDef rngHandle;
 GGL_InitDef gglConfig;
 NetSecure_InitTypeDef secConfig;
+MQTT_NetInitTypeDef mqttConfig;
 
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
+
+extern MqttClient mqttClient;
 
 NetTransportContext netContext;
 
@@ -103,13 +106,14 @@ static void UART_Init(void);
 static void RNG_Init(void);
 static void WIFI_GoOnline(void);
 
-int MQTT_MessageArrivedCallback(const char* topic, const char* message) {
+int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
 	return 0;
 }
 
 int HandleClientCallback(NetTransportContext *ctx) {
 	char buff[512];
+
 	int rc = net_TLSReceive(ctx, buff, 512, 2000);
 	if (rc < 0) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
@@ -146,7 +150,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 				MqttClient_ReturnCodeToString(rc));
 		return;
 	}
-	if ((rc = GGL_MQTT_Subscribe("config")) != RC_SUCCESS) {
+	if ((rc = GGL_MQTT_Subscribe("config", MQTT_QOS_1)) != RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Subscribe FAILED %d - %s\r\n", rc,
 				MqttClient_ReturnCodeToString(rc));
 		return;
@@ -163,6 +167,55 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 	}
 
 	GGL_MQTT_Disconnect();
+}
+
+static void SimpleMQTT_Example() {
+	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
+			0, NULL);
+	if (rc != MQTT_CODE_SUCCESS) {
+		printf("ERROR MqttClient_NetConnect rc=%d\r\n", rc);
+		return;
+	}
+
+	MqttConnect connect;
+	connect.client_id = "test cli ID";
+	connect.clean_session = 1;
+	connect.keep_alive_sec = 30;
+	rc = MqttClient_Connect(&mqttClient, &connect);
+	if (rc != MQTT_CODE_SUCCESS || connect.ack.return_code != 0) {
+		printf("ERROR MqttClient_Connect rc=%d, ack rc=%d\r\n", rc,
+				connect.ack.return_code);
+		return;
+	}
+
+	MqttPublish pub;
+	XMEMSET(&pub, 0, sizeof(MqttPublish));
+	pub.buffer = (byte*)"Test message";
+	pub.buffer_len = strlen((char*)pub.buffer);
+	pub.topic_name = "ptopic";
+	pub.qos = MQTT_QOS_0;
+
+	rc = MqttClient_Publish(&mqttClient, &pub);
+	if (rc != MQTT_CODE_SUCCESS || connect.ack.return_code != 0) {
+		printf("ERROR MqttClient_Publish rc=%d\r\n", rc);
+		return;
+	}
+
+	MqttTopic top = { "stopic", MQTT_QOS_1 };
+
+	MqttSubscribe sub;
+	sub.topic_count = 1;
+	sub.topics = &top;
+	rc = MqttClient_Subscribe(&mqttClient, &sub);
+	if (rc != MQTT_CODE_SUCCESS || connect.ack.return_code != 0) {
+		printf("ERROR MqttClient_Subscribe rc=%d\r\n", rc);
+		return;
+	}
+
+	while (1) {
+		MqttClient_WaitMessage(&mqttClient, 10000);
+		MqttClient_Ping(&mqttClient);
+	}
 }
 
 /**
@@ -183,6 +236,9 @@ int main(void) {
 		break;
 	case EXAMPLE_MQTT:
 		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+		break;
+	case EXAMPLE_SIMPLE_MQTT:
+		SimpleMQTT_Example();
 		break;
 	}
 }
@@ -245,6 +301,10 @@ static void SW_STACK_Init() {
 	secConfig.debugEnable = 1;
 	net_SecureInit(&secConfig);
 
+	mqttConfig.callback = MQTT_HandleMessageCallback;
+	mqttConfig.ctx.id = 0;
+	MQTT_Init(&mqttConfig);
+
 	// initialize google stack
 	GGL_DeviceDef device;
 	device.deviceId = "test-iot-device-2";
@@ -256,7 +316,7 @@ static void SW_STACK_Init() {
 	network.mqttHost = "mqtt.googleapis.com";
 	network.mqttPort = 8883;
 
-	gglConfig.callback = MQTT_MessageArrivedCallback;
+	gglConfig.callback = MQTT_HandleMessageCallback;
 	gglConfig.device = device;
 	gglConfig.network = network;
 	GGL_IOT_Init(&gglConfig);
@@ -300,8 +360,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 
 static void RNG_Init(void) {
 
-	__HAL_RCC_RNG_CLK_ENABLE()
-	;
+	__HAL_RCC_RNG_CLK_ENABLE();
 
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 

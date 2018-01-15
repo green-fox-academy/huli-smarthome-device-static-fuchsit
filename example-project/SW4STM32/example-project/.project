@@ -36,36 +36,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Src/system_stm32l4xx.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/GoogleIOT/google_iot.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/GoogleIOT/Src/google_iot.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/LOG/smarthome_log.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/LOG/Src/smarthome_log.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/MQTT/mqtt_net.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/MQTT/Src/mqtt_net.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/NTP/ntp_client.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/NTP/Src/ntp_client.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/NetSecure/net_secure.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/NetSecure/Src/net_secure.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/RTCUtils/rtc_utils.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/RTCUtils/Src/rtc_utils.c</locationURI>
-		</link>
-		<link>
 			<name>Drivers/STM32L4xx_HAL_Driver/stm32l4xx_hal.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c</locationURI>
@@ -361,86 +331,6 @@
 			<locationURI>PARENT-5-PROJECT_LOC/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usb.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WiFi/es_wifi.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/es_wifi.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WiFi/es_wifi_io.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/es_wifi_io.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WiFi/wifi.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/wifi.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfMQTT/mqtt_client.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_client.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfMQTT/mqtt_packet.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_packet.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfMQTT/mqtt_socket.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_socket.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/bio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/bio.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/crl.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/crl.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/internal.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/internal.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/keys.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/keys.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/ocsp.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/ocsp.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/sniffer.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/sniffer.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/ssl.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/ssl.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/tls.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/tls.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/tls13.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/tls13.c</locationURI>
-		</link>
-		<link>
-			<name>Drivers/WolfSSL/wolfio.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/wolfio.c</locationURI>
-		</link>
-		<link>
 			<name>Example/SW4STM32/startup_stm32l475xx.s</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/startup_stm32l475xx.s</locationURI>
@@ -458,7 +348,7 @@
 		<link>
 			<name>Example/User/net_transport.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Src/net_transport.c</locationURI>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/NetSecure/implementations/L4/Src/net_transport.c</locationURI>
 		</link>
 		<link>
 			<name>Example/User/stm32l4xx_it.c</name>
@@ -466,92 +356,207 @@
 			<locationURI>PARENT-2-PROJECT_LOC/Src/stm32l4xx_it.c</locationURI>
 		</link>
 		<link>
+			<name>Libraries/GoogleIOT/google_iot.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/GoogleIOT/Src/google_iot.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/LOG/smarthome_log.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/LOG/Src/smarthome_log.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/MQTT/mqtt_net.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/MQTT/Src/mqtt_net.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/NTP/ntp_client.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/NTP/Src/ntp_client.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/NetSecure/net_secure.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/NetSecure/Src/net_secure.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/NetSecure/net_transport.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/NetSecure/implementations/L4/Src/net_transport.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/RTCUtils/rtc_utils.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/RTCUtils/Src/rtc_utils.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WiFi/es_wifi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/es_wifi.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WiFi/es_wifi_io.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/es_wifi_io.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WiFi/wifi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/WiFi/Src/wifi.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfMQTT/mqtt_client.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_client.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfMQTT/mqtt_packet.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_packet.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfMQTT/mqtt_socket.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfmqtt-0.14.0/src/mqtt_socket.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/bio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/bio.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/crl.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/crl.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/internal.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/internal.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/keys.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/keys.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/ocsp.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/ocsp.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/sniffer.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/sniffer.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/ssl.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/ssl.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/tls.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/tls.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/tls13.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/tls13.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/WolfSSL/wolfio.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/wolfio.c</locationURI>
+		</link>
+		<link>
 			<name>Drivers/BSP/example-project/stm32l475e_iot01.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Drivers/BSP/B-L475E-IOT01/stm32l475e_iot01.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/aes.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/aes.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/aes.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/asn.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/asn.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/asn.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/coding.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/coding.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/coding.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/ecc.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/ecc.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/ecc.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/error.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/error.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/error.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/hash.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/hash.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/hash.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/hmac.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/hmac.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/hmac.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/logging.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/logging.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/logging.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/memory.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/memory.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/memory.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/random.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/random.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/random.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/rsa.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/rsa.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/rsa.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/sha.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/sha.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/sha.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/sha256.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/sha256.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/sha256.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/signature.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/signature.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/signature.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/tfm.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/tfm.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/tfm.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/wc_port.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/wc_port.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/wc_port.c</locationURI>
 		</link>
 		<link>
-			<name>Drivers/WolfSSL/wolfcrypt/wolfmath.c</name>
+			<name>Libraries/WolfSSL/wolfcrypt/wolfmath.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/wolfcrypt/src/wolfmath.c</locationURI>
 		</link>
