@@ -37,13 +37,9 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#define STM32
-#define WOLFSSL_USER_SETTINGS
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l4xx_hal.h"
 #include "stm32l475e_iot01.h"
-#include "wifi.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

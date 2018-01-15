@@ -76,6 +76,7 @@ typedef enum {
 typedef enum {
   WIFI_TCP_PROTOCOL = 0,
   WIFI_UDP_PROTOCOL = 1,
+  WIFI_TCP_SSL_PROTOCOL = 2
 }WIFI_Protocol_t;
 
 typedef enum {
