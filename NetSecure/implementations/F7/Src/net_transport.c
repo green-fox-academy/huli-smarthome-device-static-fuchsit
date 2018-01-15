@@ -21,12 +21,12 @@
 #define NET_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
 #define NET_EXIT(fnc, rc, fail)		SHOME_LogExit("net", fnc, rc, fail)
 
-typedef int (*NetReadWriteCb)(struct netconn *conn, const char* buffer,
+typedef int (*NetReadWriteCb)(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *processed, uint32_t timeoutMs);
 
-int net_InnerSendUnsafe(struct netconn *conn, const char* buffer,
+int net_InnerSendUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs);
-int net_InnerReceiveUnsafe(struct netconn *conn, const char* buffer,
+int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs);
 
 static void net_LwIPNetifConfig(void);
@@ -237,8 +237,15 @@ int net_Disconnect(NetTransportContext *ctx) {
 	NET_ENTER("net_Disconnect");
 	int rc = netconn_disconnect(ctx->connection.conn);
 	if (rc != ERR_OK) {
-		NET_MSG("Could not close connection\r\n");
+		NET_MSG("ERROR: netconn_disconnect\r\n");
 		NET_EXIT("net_Disconnect", rc, 1);
+		return rc;
+	}
+	rc = netconn_delete(ctx->connection.conn);
+	if (rc != ERR_OK) {
+		NET_MSG("ERROR: netconn_delete\r\n");
+		NET_EXIT("net_Disconnect", rc, 1);
+		return rc;
 	}
 	NET_EXIT("net_Disconnect", RC_SUCCESS, 0);
 	return RC_SUCCESS;
@@ -257,7 +264,8 @@ int net_ProcessRecoursively(struct netconn* conn, const char *buffer,
 	uint32_t iterationStart = HAL_GetTick();
 
 	uint32_t remaining = bufferSz - *totalSent;
-	uint32_t toSend = MAX_DATA_CHUNK_SIZE < remaining ? MAX_DATA_CHUNK_SIZE : remaining;
+	uint32_t toSend =
+	MAX_DATA_CHUNK_SIZE < remaining ? MAX_DATA_CHUNK_SIZE : remaining;
 	uint16_t currentProcessed = 0;
 	char *remBufferPtr = (char*) buffer + *totalSent;
 	int rc = callback(conn, remBufferPtr, toSend, &currentProcessed, timeoutMs);
@@ -329,20 +337,32 @@ int net_Destroy(NetTransportContext *netTransportContext) {
 	return RC_SUCCESS;
 }
 
-int net_InnerSendUnsafe(struct netconn *conn, const char* buffer,
+int net_InnerSendUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs) {
 	NET_ENTER("net_InnerSendUnsafe");
 
-	struct netbuf *netbuf = netbuf_new();
-	int rc = netbuf_ref(netbuf, (const void*) buffer, bufferSz);
-	if (rc != ERR_OK) {
-		NET_MSG("ERROR: could not create netbuf rc=%d\r\n", rc);
-		NET_EXIT("net_Send", rc, 1);
-		return rc;
+	int rc;
+	if (conn->type == NETCONN_TCP) {
+		rc = netconn_write(conn, buffer, bufferSz, NETCONN_NOCOPY);
+	} else {
+		struct netbuf *netbuf = netbuf_new();
+		if (netbuf == NULL) {
+			NET_MSG("ERROR: netbuf_new\r\n");
+			NET_EXIT("net_InnerSendUnsafe", -1, 1);
+			return -1;
+		}
+		rc = netbuf_ref(netbuf, buffer, bufferSz);
+		if (rc != ERR_OK) {
+			NET_MSG("ERROR: netbuf_ref %d\r\n", rc);
+			NET_EXIT("net_InnerSendUnsafe", rc, 1);
+			return rc;
+		}
+		rc = netconn_send(conn, netbuf);
+		netbuf_delete(netbuf);
 	}
 
-	rc = netconn_send(conn, netbuf);
-	if (rc) {
+	if (rc != ERR_OK) {
+		NET_MSG("ERROR: netconn_write %d\r\n", rc);
 		NET_EXIT("net_InnerSendUnsafe", rc, 1);
 		return rc;
 	}
@@ -351,24 +371,29 @@ int net_InnerSendUnsafe(struct netconn *conn, const char* buffer,
 	return RC_SUCCESS;
 }
 
-int net_InnerReceiveUnsafe(struct netconn *conn, const char* buffer,
+int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs) {
 	NET_ENTER("net_InnerReceiveUnsafe");
 
-	struct netbuf *netbuf = netbuf_new();
-	int rc = netbuf_ref(netbuf, (const void*) buffer, bufferSz);
-	if (rc != ERR_OK) {
-		NET_MSG("ERROR: could not create netbuf rc=%d\r\n", rc);
-		NET_EXIT("net_Send", rc, 1);
-		return rc;
-	}
-
-	rc = netconn_recv(conn, &netbuf);
+	struct netbuf *netbuf;
+	int rc = netconn_recv(conn, &netbuf);
 	if (rc) {
+		NET_MSG("ERROR: netconn_recv %d\r\n", rc);
 		NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
 		return rc;
 	}
-	*received = netbuf->p->tot_len;
+
+	char tmpBuffer[netbuf->ptr->len];
+	char **tmpBufferPtr = (char**)&tmpBuffer;
+	rc = netbuf_data(netbuf, (void**)tmpBufferPtr, received);
+	if (rc) {
+		NET_MSG("ERROR: netbuf_data %d\r\n", rc);
+		NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
+		netbuf_delete(netbuf);
+		return rc;
+	}
+	memcpy(buffer, (*tmpBufferPtr), *received);
+	netbuf_delete(netbuf);
 	NET_EXIT("net_InnerReceiveUnsafe", RC_SUCCESS, 0);
 	return RC_SUCCESS;
 }
