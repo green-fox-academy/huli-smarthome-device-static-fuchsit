@@ -22,7 +22,6 @@ int NTPClient_GetTimeSeconds(uint32_t *result) {
 	packet.li_vn_mode = 0x1b; // 00,011,011 for li = 0, vn = 3, and mode = 3
 
 	NetTransportContext ctx;
-	ctx.connection.id = 1;
 
 	int rc = net_Connect(&ctx, SOCKET_UDP, ntp_client_NTPServerHost,
 			ntp_client_NTPServerPort, NTP_DEFAULT_TIMEOUT);
