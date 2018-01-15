@@ -70,7 +70,14 @@ In my project in the end the project's directory tree looks like this:
 
 ![Libraries tree](images/libraries_tree.png "Libraries tree")
 
-### 4. You're ready
+### 4. Include WolfSSL Config
+
+Open:
+Includes/...Third_Party/wolfssl-3.13.0/wolfssl/wolfcrypt/settings.h
+
+Write in line 166: "#define WOLFSSL_USER_SETTINGS"  (above line 167 "#ifdef WOLFSSL_USER_SETTING")
+
+### 5. You're ready
 
 Now you can include the header files and use the libraries. For example using the **LOG** library:
 
