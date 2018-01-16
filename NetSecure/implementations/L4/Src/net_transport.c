@@ -20,6 +20,7 @@ typedef enum ServerConnectionStatus {
 } ServerConnectionStatus;
 
 NetHandleClientConnectionCallback net_HandleClientCallback;
+uint16_t net_nextLocalPort = 5000;
 
 int net_Init(NetTransportContext *ctx) {
 	NET_ENTER("net_Init");
@@ -65,7 +66,7 @@ int net_Connect(NetTransportContext *ctx, SocketType sockType, const char* host,
 
 	NET_MSG("DNS lookup result: %s => %d.%d.%d.%d\r\n", host, destIp[0],
 			destIp[1], destIp[2], destIp[3]);
-
+	ctx->connection.id = 0;
 	rc = net_ConnectIp(ctx, sockType, destIp, port, timeoutMs);
 	if (rc != WIFI_STATUS_OK) {
 		NET_MSG("Could not open connection\r\n");
@@ -85,7 +86,7 @@ int net_ConnectIp(NetTransportContext *ctx, SocketType sockType,
 			sockType == SOCKET_UDP ? WIFI_UDP_PROTOCOL : WIFI_TCP_PROTOCOL;
 	int rc;
 	if ((rc = WIFI_OpenClientConnection(ctx->connection.id, protocol, "client",
-			targetIp, port, timeoutMs)) != WIFI_STATUS_OK) {
+			targetIp, port, net_nextLocalPort++)) != WIFI_STATUS_OK) {
 		NET_MSG("Could not open connection\r\n");
 		NET_EXIT("net_ConnectIp", rc, 1);
 		return rc;
