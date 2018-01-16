@@ -16,7 +16,7 @@ void SHOME_LogEnter(const char* module, const char *func) {
 	if (!SHOME_DebugEnabled) {
 		return;
 	}
-	printf("%s > %s() - ENTER\r\n", module, func);
+	printf("%s > [ENTER] %s()\r\n", module, func);
 }
 
 void SHOME_LogExit(const char* module, const char *func, int rc, int failed) {
@@ -24,15 +24,26 @@ void SHOME_LogExit(const char* module, const char *func, int rc, int failed) {
 		return;
 	}
 	const char *st = failed ? "FAIL" : "EXIT";
-	printf("%s > %s() - %s(rc=%d)\r\n", module, func, st, rc);
+	printf("%s > [%s] %s() - return=%d\r\n", module, st, func, rc);
 }
 
-void SHOME_LogMsg(const char *fmt, ...) {
+void SHOME_LogMsgWithoutModule(const char *fmt, ...) {
 	if (!SHOME_DebugEnabled) {
 		return;
 	}
 	va_list args;
 	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
+}
+
+void SHOME_LogMsg(const char* module, const char *fmt, ...) {
+	if (!SHOME_DebugEnabled) {
+		return;
+	}
+	va_list args;
+	va_start(args, fmt);
+	printf("%s > [MSG] ", module);
 	vprintf(fmt, args);
 	va_end(args);
 }

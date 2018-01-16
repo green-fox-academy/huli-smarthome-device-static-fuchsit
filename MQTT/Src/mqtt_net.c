@@ -5,7 +5,7 @@
 #include "wolfmqtt/mqtt_client.h"
 
 #define MQTT_ENTER(fnc)					SHOME_LogEnter("mqtt", fnc)
-#define MQTT_MSG(fnc, ...)				SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define MQTT_MSG(fmt, ...)				SHOME_LogMsg("mqtt", fmt, ##__VA_ARGS__)
 #define MQTT_EXIT(fnc, rc, fail)		SHOME_LogExit("mqtt", fnc, rc, fail)
 
 NetTransportContext mqttNetTransportContext = { 0 };

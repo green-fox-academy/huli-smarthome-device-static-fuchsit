@@ -8,6 +8,8 @@
 #include "lwip/netbuf.h"
 #include "lwip/ip4.h"
 #include "lwip/api.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #if defined(STM32L475xx)
 #include "stm32l4xx_hal.h"
@@ -18,7 +20,7 @@
 #define MAX_DATA_CHUNK_SIZE			1400
 
 #define NET_ENTER(fnc)				SHOME_LogEnter("net", fnc)
-#define NET_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define NET_MSG(fmt, ...)			SHOME_LogMsg("net", fmt, ##__VA_ARGS__)
 #define NET_EXIT(fnc, rc, fail)		SHOME_LogExit("net", fnc, rc, fail)
 
 typedef int (*NetReadWriteCb)(struct netconn *conn, char* buffer,
@@ -371,29 +373,71 @@ int net_InnerSendUnsafe(struct netconn *conn, char* buffer,
 	return RC_SUCCESS;
 }
 
+struct netbuf *net_activeBuf = NULL;
+uint16_t net_activeBufPos = 0;
+
 int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs) {
 	NET_ENTER("net_InnerReceiveUnsafe");
-
-	struct netbuf *netbuf;
-	int rc = netconn_recv(conn, &netbuf);
-	if (rc) {
-		NET_MSG("ERROR: netconn_recv %d\r\n", rc);
-		NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
-		return rc;
+	if (net_activeBuf == NULL) {
+		NET_MSG("No active buffer - invoking recv\r\n");
+		net_activeBufPos = 0;
+		int rc = netconn_recv(conn, &net_activeBuf);
+		if (rc) {
+			NET_MSG("ERROR: netconn_recv %d\r\n", rc);
+			NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
+			return rc;
+		}
 	}
 
-	char tmpBuffer[netbuf->ptr->len];
-	char **tmpBufferPtr = (char**)&tmpBuffer;
-	rc = netbuf_data(netbuf, (void**)tmpBufferPtr, received);
+
+	uint16_t remainingData = net_activeBuf->ptr->len - net_activeBufPos;
+	NET_MSG("bufferSz=%lu, net_activeBufPos=%d, remainingData=%d, currentSize=%d\r\n", bufferSz, net_activeBufPos, remainingData, net_activeBuf->ptr->len);
+
+	char tmpBuffer[net_activeBuf->ptr->len];
+	char **tmpBufferPtr = (char**) &tmpBuffer;
+	int rc = netbuf_data(net_activeBuf, (void**) tmpBufferPtr, received);
 	if (rc) {
 		NET_MSG("ERROR: netbuf_data %d\r\n", rc);
 		NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
-		netbuf_delete(netbuf);
+		netbuf_delete(net_activeBuf);
 		return rc;
 	}
-	memcpy(buffer, (*tmpBufferPtr), *received);
-	netbuf_delete(netbuf);
+
+	if (remainingData >= bufferSz) {
+		(*tmpBufferPtr) += net_activeBufPos;
+		memcpy(buffer, (*tmpBufferPtr), bufferSz);
+		*received = bufferSz;
+		net_activeBufPos += bufferSz;
+		if (net_activeBuf->ptr->len == net_activeBufPos) {
+			netbuf_delete(net_activeBuf);
+			net_activeBuf = NULL;
+			net_activeBufPos = 0;
+		}
+	} else {
+		(*tmpBufferPtr) += net_activeBufPos;
+		memcpy(buffer, (*tmpBufferPtr), remainingData);
+		*received = remainingData;
+
+		net_activeBufPos = 0;
+		if (netbuf_next(net_activeBuf) == -1) {
+			netbuf_delete(net_activeBuf);
+			net_activeBuf = NULL;
+		}
+		uint16_t remLength = bufferSz-remainingData;
+		char remBuff[remLength+1];
+		uint16_t remReadLength;
+
+		int rc = net_InnerReceiveUnsafe(conn, remBuff, remLength, &remReadLength, timeoutMs);
+		if (rc) {
+			NET_MSG("ERROR: net_InnerReceiveUnsafe %d\r\n", rc);
+			NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
+			return rc;
+		}
+		char *secPartBuf = buffer + remainingData;
+		memcpy(secPartBuf, remBuff, remReadLength);
+		*received += remReadLength;
+	}
 	NET_EXIT("net_InnerReceiveUnsafe", RC_SUCCESS, 0);
 	return RC_SUCCESS;
 }

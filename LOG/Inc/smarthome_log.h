@@ -42,9 +42,19 @@ void SHOME_LogExit(const char* module, const char *func, int rc, int failed);
  * @brief	Logs a message using the parameters. This is just a wrapper function
  * 			for printf.
  *
+ * @param	module	short name of the module, which will be included in
+ * 					the log message
  * @param	fmt		the string format to log
  * @param	vargs	the necessary parameters to assemble the log string
  */
-void SHOME_LogMsg(const char *fmt, ...);
+void SHOME_LogMsg(const char* module, const char *fmt, ...);
+
+/**
+ * @brief	Logs a message using the parameters without module
+ *
+ * @param	fmt		the string format to log
+ * @param	vargs	the necessary parameters to assemble the log string
+ */
+void SHOME_LogMsgWithoutModule(const char *fmt, ...);
 
 #endif // SMARTHOME_LOG_H

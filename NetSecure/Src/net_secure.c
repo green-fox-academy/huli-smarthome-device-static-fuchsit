@@ -11,7 +11,7 @@
 #define NET_SECURE_DEFAULT_TIMEOUT		5000
 
 #define NETS_ENTER(fnc)					SHOME_LogEnter("nets", fnc)
-#define NETS_MSG(fnc, ...)				SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define NETS_MSG(fmt, ...)				SHOME_LogMsg("nets", fmt, ##__VA_ARGS__)
 #define NETS_EXIT(fnc, rc, fail)		SHOME_LogExit("nets", fnc, rc, fail)
 
 int WolfSSL_IORecvCallback(WOLFSSL *ssl, char *buf, int sz, void *ctx);
@@ -46,7 +46,7 @@ void wolfSSL_LoggingCallback(const int logLevel, const char * const logMessage) 
 	default:
 		logLevelStr = "UNKNOWN";
 	}
-	NETS_MSG("wolfssl > [%s] %s\r\n", logLevelStr, logMessage);
+	SHOME_LogMsgWithoutModule("wolfssl > [%s] %s\r\n", logLevelStr, logMessage);
 }
 
 void net_SecureInit(NetSecure_InitTypeDef *netSecureInit) {
@@ -65,6 +65,7 @@ time_t net_CustomTimestampCallback(time_t x) {
 }
 
 uint32_t net_CustomRandomCallback(void) {
+	NETS_MSG("Generating random number\r\n");
 	return HAL_RNG_GetRandomNumber(net_secure_config->rngHandle);
 }
 

@@ -5,7 +5,7 @@
 #include "smarthome_log.h"
 
 #define NTP_ENTER(fnc)				SHOME_LogEnter("ntp", fnc)
-#define NTP_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define NTP_MSG(fmt, ...)			SHOME_LogMsg("ntp", fmt, ##__VA_ARGS__)
 #define NTP_EXIT(fnc, rc, fail)		SHOME_LogExit("ntp", fnc, rc, fail)
 
 #define NTP_DEFAULT_TIMEOUT	5000
