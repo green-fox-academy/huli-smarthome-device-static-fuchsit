@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file    Templates/Src/main.c
+m * @file    Templates/Src/main.c
  * @author  MCD Application Team
  * @brief   Main program body
  ******************************************************************************
@@ -307,9 +307,13 @@ static void SW_STACK_Init() {
 	netContext.connection.id = 0;
 	net_Init(&netContext);
 
+	printf("before net secure init\n");
+
 	secConfig.rngHandle = &rngHandle;
 	secConfig.debugEnable = 1;
 	net_SecureInit(&secConfig);
+
+	printf("before mqtt init\n");
 
 	mqttConfig.callback = MQTT_HandleMessageCallback;
 	mqttConfig.ctx.id = 0;
@@ -332,6 +336,7 @@ static void SW_STACK_Init() {
 	GGL_IOT_Init(&gglConfig);
 
 	NTPClient_Init("hu.pool.ntp.org", 123);
+	printf("was here\n");
 }
 
 static void Peripherals_Init(void) {
