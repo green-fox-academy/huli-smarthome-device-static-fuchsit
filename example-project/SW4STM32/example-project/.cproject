@@ -40,7 +40,7 @@
 									<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/Components/stmpe1600"/>
 									<listOptionValue builtIn="false" value="../../../../../../Drivers/BSP/Components/stmpe811"/>
 									<listOptionValue builtIn="false" value="../../../../../../Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfmqtt-0.14.0"/>
+									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfMQTT-0.14.0"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfssl-3.13.0"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/RTCUtils/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/NTP/Inc"/>
