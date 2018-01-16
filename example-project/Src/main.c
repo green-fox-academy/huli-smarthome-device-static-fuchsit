@@ -44,6 +44,7 @@
 #include "google_iot.h"
 #include "ntp_client.h"
 #include "rtc_utils.h"
+#include "jsmn.h"
 
 #define EXAMPLE_KIND	EXAMPLE_SIMPLE_MQTT
 #define NEED_WIFI		1
@@ -74,10 +75,8 @@ typedef enum ExampleKind {
 } ExampleKind;
 
 /* Private define ------------------------------------------------------------*/
-#define SSID     "Cethal"
-#define PASSWORD "ideahelysegben"
-//#define SSID     "A66 Guest"
-//#define PASSWORD "Hello123"
+#define SSID     "A66 Guest"
+#define PASSWORD "Hello123"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -89,6 +88,11 @@ MQTT_NetInitTypeDef mqttConfig;
 
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
+
+
+static const char *JSON_STRING =
+	"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
+	"}";
 
 extern MqttClient mqttClient;
 
@@ -229,6 +233,12 @@ int main(void) {
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
+
+	conf_t conf;
+
+	printf("hello\n");
+	parse_JSON(&conf, JSON_STRING);
+	printf("conf dev: %s\n", conf.device);
 
 	switch (EXAMPLE_KIND) {
 	case EXAMPLE_HTTPS_REST:

@@ -341,14 +341,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/syscalls.c</locationURI>
 		</link>
 		<link>
+			<name>Example/User/jsmn.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn.c</locationURI>
+		</link>
+		<link>
 			<name>Example/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>
-		</link>
-		<link>
-			<name>Example/User/net_transport.c</name>
-			<type>1</type>
-			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/NetSecure/implementations/L4/Src/net_transport.c</locationURI>
 		</link>
 		<link>
 			<name>Example/User/stm32l4xx_it.c</name>
