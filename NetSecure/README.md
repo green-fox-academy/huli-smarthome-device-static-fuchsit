@@ -16,8 +16,8 @@ For L4 and F7 boards you can use these:
 
 | Board | Directory |
 |-------|-----------|
-| L4 | [Using WiFi module](L4) |
-| F7 | [Using LwIP](F7) |
+| L4 | [Using WiFi module](implementations/L4) |
+| F7 | [Using LwIP](implementations/F7) |
 
 ## HTTP REST service
 ```c
