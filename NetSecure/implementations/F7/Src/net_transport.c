@@ -260,8 +260,8 @@ int net_ProcessRecoursively(struct netconn* conn, const char *buffer,
 
 	if (spentTime > timeoutMs) {
 		NET_MSG("ERROR: no more data, so timeout\r\n");
-		NET_EXIT("net_ProcessRecoursively", RC_TIMEOUT, 1);
-		return RC_TIMEOUT;
+		NET_EXIT("net_ProcessRecoursively", ERR_TIMEOUT, 1);
+		return ERR_TIMEOUT;
 	}
 	uint32_t iterationStart = HAL_GetTick();
 
@@ -316,11 +316,11 @@ int net_Receive(NetTransportContext *ctx, const char* buffer,
 	uint16_t totalReceived = 0;
 	int rc = net_ProcessRecoursively(ctx->connection.conn, buffer, bufferSz,
 			&totalReceived, net_InnerReceiveUnsafe, timeoutMs, 0);
-	if (rc == RC_SUCCESS) {
+	if (rc == ERR_OK) {
 		NET_EXIT("net_Receive", RC_SUCCESS, 0);
 		return totalReceived;
 	}
-	if (rc == RC_TIMEOUT && totalReceived >= 0) {
+	if (rc == ERR_TIMEOUT && totalReceived >= 0) {
 		NET_MSG("WARNING: timeout, data size in read buffer: %d\r\n",
 				totalReceived);
 		NET_EXIT("net_Receive", RC_SUCCESS, 0);
@@ -343,6 +343,7 @@ int net_InnerSendUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs) {
 	NET_ENTER("net_InnerSendUnsafe");
 
+	netconn_set_sendtimeout(conn, timeoutMs);
 	int rc;
 	if (conn->type == NETCONN_TCP) {
 		rc = netconn_write(conn, buffer, bufferSz, NETCONN_NOCOPY);
@@ -379,9 +380,10 @@ uint16_t net_activeBufPos = 0;
 int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 		const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs) {
 	NET_ENTER("net_InnerReceiveUnsafe");
+
 	if (net_activeBuf == NULL) {
-		NET_MSG("No active buffer - invoking recv\r\n");
 		net_activeBufPos = 0;
+		netconn_set_recvtimeout(conn, timeoutMs);
 		int rc = netconn_recv(conn, &net_activeBuf);
 		if (rc) {
 			NET_MSG("ERROR: netconn_recv %d\r\n", rc);
@@ -390,10 +392,7 @@ int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 		}
 	}
 
-
 	uint16_t remainingData = net_activeBuf->ptr->len - net_activeBufPos;
-	NET_MSG("bufferSz=%lu, net_activeBufPos=%d, remainingData=%d, currentSize=%d\r\n", bufferSz, net_activeBufPos, remainingData, net_activeBuf->ptr->len);
-
 	char tmpBuffer[net_activeBuf->ptr->len];
 	char **tmpBufferPtr = (char**) &tmpBuffer;
 	int rc = netbuf_data(net_activeBuf, (void**) tmpBufferPtr, received);
@@ -424,11 +423,12 @@ int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer,
 			netbuf_delete(net_activeBuf);
 			net_activeBuf = NULL;
 		}
-		uint16_t remLength = bufferSz-remainingData;
-		char remBuff[remLength+1];
+		uint16_t remLength = bufferSz - remainingData;
+		char remBuff[remLength + 1];
 		uint16_t remReadLength;
 
-		int rc = net_InnerReceiveUnsafe(conn, remBuff, remLength, &remReadLength, timeoutMs);
+		int rc = net_InnerReceiveUnsafe(conn, remBuff, remLength,
+				&remReadLength, timeoutMs);
 		if (rc) {
 			NET_MSG("ERROR: net_InnerReceiveUnsafe %d\r\n", rc);
 			NET_EXIT("net_InnerReceiveUnsafe", rc, 1);

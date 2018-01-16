@@ -65,7 +65,6 @@ time_t net_CustomTimestampCallback(time_t x) {
 }
 
 uint32_t net_CustomRandomCallback(void) {
-	NETS_MSG("Generating random number\r\n");
 	return HAL_RNG_GetRandomNumber(net_secure_config->rngHandle);
 }
 
