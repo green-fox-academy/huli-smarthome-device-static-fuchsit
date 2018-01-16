@@ -20,7 +20,7 @@ extern "C" {
 #define XTIME(tl)       net_CustomTimestampCallback((tl))
 
 #undef  SINGLE_THREADED
-#define SINGLE_THREADED
+//#define SINGLE_THREADED
 
 #undef WOLFSSL_USER_IO
 #define WOLFSSL_USER_IO
@@ -33,7 +33,7 @@ extern "C" {
 
 
 #undef  FREERTOS
-//#define FREERTOS
+#define FREERTOS
 
 #undef  WOLFSSL_LWIP
 //#define WOLFSSL_LWIP

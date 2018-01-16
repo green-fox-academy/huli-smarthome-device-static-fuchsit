@@ -10,7 +10,7 @@
 #include "net_settings.h"
 
 #define GGL_ENTER(fnc)				SHOME_LogEnter("ggl", fnc)
-#define GGL_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define GGL_MSG(fmt, ...)			SHOME_LogMsg("ggl", fmt, ##__VA_ARGS__)
 #define GGL_EXIT(fnc, rc, fail)		SHOME_LogExit("ggl", fnc, rc, fail)
 
 static GGL_InitDef *GGL_Config;
