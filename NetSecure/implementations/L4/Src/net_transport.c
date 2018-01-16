@@ -4,7 +4,7 @@
 #include "wifi.h"
 
 #define NET_ENTER(fnc)				SHOME_LogEnter("net", fnc)
-#define NET_MSG(fnc, ...)			SHOME_LogMsg(fnc, ##__VA_ARGS__)
+#define NET_MSG(fmt, ...)			SHOME_LogMsg("net", fmt, ##__VA_ARGS__)
 #define NET_EXIT(fnc, rc, fail)		SHOME_LogExit("net", fnc, rc, fail)
 
 typedef int (*NetReadWriteCb)(uint32_t connId, const char* buffer,
