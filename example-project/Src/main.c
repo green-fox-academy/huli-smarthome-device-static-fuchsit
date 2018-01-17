@@ -136,14 +136,14 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 int HandleClientCallback(NetTransportContext *ctx) {
 	char buff[512];
 
-	int rc = net_Receive(ctx, buff, 512, 2000);
+	int rc = net_TLSReceive(ctx, buff, 512, 2000);
 	if (rc < 0) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
 		return 0;
 	}
 	char snd[] =
 			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"test_value\"}";
-	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
+	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
@@ -152,8 +152,8 @@ int HandleClientCallback(NetTransportContext *ctx) {
 
 
 void HTTPSServerStart() {
-	net_SetHandleClientConnectionCallback(HandleClientCallback);
-	int rc = net_StartServerConnection(&netContext, SOCKET_TCP, 80);
+	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
+	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
