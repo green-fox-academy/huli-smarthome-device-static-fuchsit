@@ -99,7 +99,7 @@ static void TIMER_Init(void);
 int main(void) {
 	Peripherals_Init();
 
-	TIM3->CCR1 = 0xFF;
+	TIM3->CCR1 = 0x00;
 	TIM2->CCR1 = 0xFF;
 	TIM3->CCR4 = 0x00;
 
