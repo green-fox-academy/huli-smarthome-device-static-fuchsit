@@ -36,7 +36,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define REDLED GPIOB, GPIO_PIN_0
+#define REDPORT GPIOB
+#define REDPIN GPIO_PIN_0
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -62,10 +63,10 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
-UART_HandleTypeDef uartHandle;
-TIM_HandleTypeDef    TimHandle;
-TIM_OC_InitTypeDef sConfig;
-GPIO_InitTypeDef LEDRED;            // create a config structure
+UART_HandleTypeDef	uartHandle;
+TIM_HandleTypeDef	TimHandle;
+TIM_OC_InitTypeDef	sConfig;
+GPIO_InitTypeDef	LEDRED;            // create a config structure
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,11 +90,11 @@ int main(void) {
 	while(1){
 		printf("%d\n" , TIM3->CNT);
 		HAL_Delay(500);
-		TIM3->CCR1 = 500;
+		TIM3->CCR3 = 2000;
 		HAL_Delay(500);
-		TIM3->CCR1 = 1000;
+		TIM3->CCR3 = 1000;
 		HAL_Delay(500);
-		TIM3->CCR1 = 2000;
+		TIM3->CCR3 = 0;
 	//	HAL_GPIO_WritePin(REDLED, 1);
 /*
 		BSP_LED_On(LED_GREEN);
@@ -146,7 +147,7 @@ static void PWM_Init(void) {
 	HAL_TIM_PWM_Init(&TimHandle);
 
 	sConfig.OCMode = TIM_OCMODE_PWM1;
-	sConfig.Pulse = 0;
+	sConfig.Pulse = 2000;
 	HAL_TIM_PWM_ConfigChannel(&TimHandle , &sConfig , TIM_CHANNEL_3);
 
 	HAL_TIM_PWM_Start(&TimHandle , TIM_CHANNEL_3);
@@ -171,13 +172,13 @@ static void LED_Init(void) {
 
 	__HAL_RCC_GPIOB_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
-	LEDRED.Pin = GPIO_PIN_0;            // this is about PIN 1
+	LEDRED.Pin = REDPIN;            // this is about PIN 1
 	LEDRED.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
-	LEDRED.Pull = GPIO_PULLDOWN;      // the push-up-down should work as pulldown
+	LEDRED.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
 	LEDRED.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
 	LEDRED.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
 
-	HAL_GPIO_Init(GPIOB, &LEDRED);   // initialize the pin on GPIO* port with HAL
+	HAL_GPIO_Init(REDPORT, &LEDRED);   // initialize the pin on GPIO* port with HAL
 
 /*
 
