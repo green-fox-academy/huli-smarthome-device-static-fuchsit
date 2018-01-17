@@ -70,11 +70,11 @@
 
 UART_HandleTypeDef	uartHandle;
 TIM_HandleTypeDef	Red;
-TIM_OC_InitTypeDef RedPwmHandle;
+TIM_OC_InitTypeDef 	RedPwmHandle;
 TIM_HandleTypeDef	Green;
-TIM_OC_InitTypeDef GreenPwmHandle;
+TIM_OC_InitTypeDef 	GreenPwmHandle;
 TIM_HandleTypeDef	Blue;
-TIM_OC_InitTypeDef BluePwmHandle;
+TIM_OC_InitTypeDef 	BluePwmHandle;
 
 
 
@@ -100,17 +100,12 @@ int main(void) {
 	Peripherals_Init();
 
 	TIM3->CCR1 = 0xFF;
-	TIM2->CCR1 = 0x00;
+	TIM2->CCR1 = 0xFF;
 	TIM3->CCR4 = 0x00;
 
+
 	while(1){
-		/*int a = rand() % 255 + 1;
-		int b = rand() % 255 + 1;
-		int c = rand() % 255 + 1;
-		TIM3->CCR1 = a;
-		TIM2->CCR1 = b;
-		TIM3->CCR4 = c;
-		HAL_Delay(400);*/
+
 	}
 }
 
@@ -140,11 +135,12 @@ static void Peripherals_Init(void) {
 }
 
 static void UART_Init(void) {
-	uartHandle.Init.BaudRate = 115200;
-	uartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-	uartHandle.Init.StopBits = UART_STOPBITS_1;
-	uartHandle.Init.Parity = UART_PARITY_NONE;
-	uartHandle.Init.Mode = UART_MODE_TX_RX;
+	uartHandle.Init.BaudRate 	= 115200;
+	uartHandle.Init.WordLength 	= UART_WORDLENGTH_8B;
+	uartHandle.Init.StopBits 	= UART_STOPBITS_1;
+	uartHandle.Init.Parity 		= UART_PARITY_NONE;
+	uartHandle.Init.HwFlowCtl   = UART_HWCONTROL_NONE;
+	uartHandle.Init.Mode 		= UART_MODE_TX_RX;
 
 	BSP_COM_Init(COM1, &uartHandle);
 }
@@ -170,8 +166,8 @@ static void TIMER_Init(void) {
 	Red.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	Red.Init.CounterMode       = TIM_COUNTERMODE_UP;
 
-	RedPwmHandle.OCMode = TIM_OCMODE_PWM1;
-	RedPwmHandle.Pulse = 0;
+	RedPwmHandle.OCMode 	= TIM_OCMODE_PWM1;
+	RedPwmHandle.Pulse 		= 0;
 
 	HAL_TIM_PWM_ConfigChannel(&Red, &RedPwmHandle, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Init(&Red);
@@ -184,8 +180,8 @@ static void TIMER_Init(void) {
 	Green.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	Green.Init.CounterMode       = TIM_COUNTERMODE_UP;
 
-	GreenPwmHandle.OCMode = TIM_OCMODE_PWM1;
-	GreenPwmHandle.Pulse = 0;
+	GreenPwmHandle.OCMode 	= TIM_OCMODE_PWM1;
+	GreenPwmHandle.Pulse 	= 0;
 
 	HAL_TIM_PWM_ConfigChannel(&Green, &GreenPwmHandle, TIM_CHANNEL_4);
 	HAL_TIM_PWM_Init(&Green); //Configure the timer
@@ -213,29 +209,29 @@ static void LED_Init(void) {
 	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
 	GPIO_InitTypeDef LEDRED;
-	LEDRED.Pin = GPIO_PIN_15;            // this is about PIN 1
-	LEDRED.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDRED.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDRED.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDRED.Alternate = GPIO_AF1_TIM2;   //Alterante function to set PWM timer
+	LEDRED.Pin 			= GPIO_PIN_15;            // this is about PIN 1
+	LEDRED.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
+	LEDRED.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
+	LEDRED.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
+	LEDRED.Alternate 	= GPIO_AF1_TIM2;   //Alterante function to set PWM timer
 
 	HAL_GPIO_Init(GPIOA, &LEDRED);   // initialize the pin on GPIO* port with HAL
 
 	GPIO_InitTypeDef LEDGREEN;
-	LEDGREEN.Pin = GPIO_PIN_1;            // this is about PIN 1
-	LEDGREEN.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDGREEN.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDGREEN.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDGREEN.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
+	LEDGREEN.Pin 		= GPIO_PIN_1;            // this is about PIN 1
+	LEDGREEN.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
+	LEDGREEN.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
+	LEDGREEN.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
+	LEDGREEN.Alternate 	= GPIO_AF2_TIM3;   //Alterante function to set PWM timer
 
 	HAL_GPIO_Init(GPIOB, &LEDGREEN);   // initialize the pin on GPIO* port with HAL
 
 	GPIO_InitTypeDef LEDBLUE;
-	LEDBLUE.Pin = GPIO_PIN_4;            // this is about PIN 1
-	LEDBLUE.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDBLUE.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDBLUE.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDBLUE.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
+	LEDBLUE.Pin 		= GPIO_PIN_4;            // this is about PIN 1
+	LEDBLUE.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
+	LEDBLUE.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
+	LEDBLUE.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
+	LEDBLUE.Alternate 	= GPIO_AF2_TIM3;   //Alterante function to set PWM timer
 
 	HAL_GPIO_Init(GPIOB, &LEDBLUE);   // initialize the pin on GPIO* port with HAL
 
@@ -265,17 +261,17 @@ static void SystemClock_Config(void) {
 	RCC_OscInitTypeDef RCC_OscInitStruct;
 
 	/* MSI is enabled after System reset, activate PLL with MSI as source */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+	RCC_OscInitStruct.OscillatorType 	= RCC_OSCILLATORTYPE_MSI;
+	RCC_OscInitStruct.MSIState 			= RCC_MSI_ON;
+	RCC_OscInitStruct.MSIClockRange 	= RCC_MSIRANGE_6;
 	RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
-	RCC_OscInitStruct.PLL.PLLM = 1;
-	RCC_OscInitStruct.PLL.PLLN = 40;
-	RCC_OscInitStruct.PLL.PLLR = 2;
-	RCC_OscInitStruct.PLL.PLLP = 7;
-	RCC_OscInitStruct.PLL.PLLQ = 4;
+	RCC_OscInitStruct.PLL.PLLState 		= RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource 	= RCC_PLLSOURCE_MSI;
+	RCC_OscInitStruct.PLL.PLLM 			= 1;
+	RCC_OscInitStruct.PLL.PLLN 			= 40;
+	RCC_OscInitStruct.PLL.PLLR 			= 2;
+	RCC_OscInitStruct.PLL.PLLP 			= 7;
+	RCC_OscInitStruct.PLL.PLLQ 			= 4;
 	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
 		/* Initialization Error */
 		while (1)
@@ -284,12 +280,11 @@ static void SystemClock_Config(void) {
 
 	/* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
 	 clocks dividers */
-	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK
-			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.ClockType 		= (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+	RCC_ClkInitStruct.SYSCLKSource 		= RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider 	= RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider 	= RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider 	= RCC_HCLK_DIV1;
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) {
 		/* Initialization Error */
 		while (1)
