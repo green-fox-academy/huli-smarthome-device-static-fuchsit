@@ -1435,6 +1435,8 @@ ES_WIFI_Status_t ES_WIFI_StartServerSingleConn(ES_WIFIObject_t *Obj, ES_WIFI_Con
                 break;
               }
               Obj->fops.IO_Delay(1000);
+              printf("itt akadtam el\n");
+              HAL_Delay(1000);
             } while (1);
 #endif  
           }

@@ -46,8 +46,11 @@ m * @file    Templates/Src/main.c
 #include "rtc_utils.h"
 #include "jsmn.h"
 
-#define EXAMPLE_KIND	EXAMPLE_SIMPLE_MQTT
+#define EXAMPLE_KIND	EXAMPLE_HTTPS_REST
 #define NEED_WIFI		1
+
+#define NTP_MAX_RETRY_COUNT			10
+#define NTP_RETRY_INTERVAL_MS		10000
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -73,6 +76,21 @@ const char *STATE_PATTERN = "{\"ledOn\": %d}";
 typedef enum ExampleKind {
 	EXAMPLE_SIMPLE_MQTT, EXAMPLE_MQTT, EXAMPLE_HTTPS_REST,
 } ExampleKind;
+
+typedef enum State_Of_Operation {
+	STATE_SSDP_DISCOVERY, 	// waiting for the correct ssdp discovery packet to arrive
+	STATE_HTTP_SERVER,		// on receiving GET /getDeviceParams returns device params, on POST updates device config
+	CONNECT_GGL_CORE,		// connects and subscribes to ggl iot core
+	STATE_MQTT				// listens to commands from the subscribed iot core topics
+} State_Of_Operation;
+
+typedef struct device_config{
+    char *device;
+    char *id;
+    char *ip;
+    int port[12];
+    State_Of_Operation state_of_device;
+} device_config_t;
 
 /* Private define ------------------------------------------------------------*/
 #define SSID     "A66 Guest"
@@ -118,23 +136,24 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 int HandleClientCallback(NetTransportContext *ctx) {
 	char buff[512];
 
-	int rc = net_TLSReceive(ctx, buff, 512, 2000);
+	int rc = net_Receive(ctx, buff, 512, 2000);
 	if (rc < 0) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
 		return 0;
 	}
 	char snd[] =
 			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"test_value\"}";
-	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
+	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
 	return 0;
 }
 
+
 void HTTPSServerStart() {
-	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
-	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
+	net_SetHandleClientConnectionCallback(HandleClientCallback);
+	int rc = net_StartServerConnection(&netContext, SOCKET_TCP, 80);
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -181,6 +200,7 @@ static void SimpleMQTT_Example() {
 		return;
 	}
 
+	printf("after mqqt client netconnect\n");
 	MqttConnect connect;
 	connect.client_id = "test cli ID";
 	connect.clean_session = 1;
@@ -192,6 +212,7 @@ static void SimpleMQTT_Example() {
 		return;
 	}
 
+	printf("after mqqt client connect\n");
 	MqttPublish pub;
 	XMEMSET(&pub, 0, sizeof(MqttPublish));
 	pub.buffer = (byte*)"Test message";
@@ -240,17 +261,32 @@ int main(void) {
 	parse_JSON(&conf, JSON_STRING);
 	printf("conf dev: %s\n", conf.device);
 
-	switch (EXAMPLE_KIND) {
-	case EXAMPLE_HTTPS_REST:
-		HTTPSServerStart();
-		break;
-	case EXAMPLE_MQTT:
-		Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
-		break;
-	case EXAMPLE_SIMPLE_MQTT:
-		SimpleMQTT_Example();
-		break;
+	int state = STATE_SSDP_DISCOVERY;
+
+	while (1) {
+
+		switch (state) {
+		case STATE_SSDP_DISCOVERY:
+			printf("entered SSDP state\n");
+			HAL_Delay(500);
+			state = STATE_HTTP_SERVER;
+			break;
+		case STATE_HTTP_SERVER:
+			printf("entered HTTP state\n");
+			HTTPSServerStart();
+			HAL_Delay(500);
+			state = STATE_MQTT;
+			break;
+		case STATE_MQTT:
+			printf("entered MQTT state\n");
+			HAL_Delay(500);
+			state = STATE_SSDP_DISCOVERY;
+//			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+//			SimpleMQTT_Example();
+			break;
+		}
 	}
+
 }
 
 static void WIFI_GoOnline(void) {
@@ -281,18 +317,31 @@ static void WIFI_GoOnline(void) {
 	tryConnect = 1;
 	int rtcSet = 0;
 	uint32_t rtcCount = 1;
+	int rc;
+	uint8_t triesCount = 0;
 	while (rtcSet == 0) {
 		if (!tryConnect) {
 			continue;
 		}
 		printf("Trying to set the RTC clock from NTP\r\n");
 		uint32_t ntpResult = 0;
-		if (NTPClient_GetTimeSeconds(&ntpResult) != 0) {
-			printf("ERROR: could not query NTP time\r\n");
+
+
+		while ((rc = NTPClient_GetTimeSeconds(&ntpResult)) != 0 && triesCount < NTP_MAX_RETRY_COUNT) {
+			triesCount++;
+			printf("Could not read NTP timestamp in iteration %d, retrying in %dms...\r\n", triesCount, NTP_RETRY_INTERVAL_MS);
+			HAL_Delay(NTP_RETRY_INTERVAL_MS);
+		}
+
+		if (rc != 0) {
+			printf("Total facepalm, could not get NTP timestamp!\r\n");
+			//explodeAll();
 		} else {
 			RTCUtils_SetEpochTimestamp(ntpResult);
 			rtcSet = 1;
 		}
+		printf("ntp result: %d\n", ntpResult);
+
 		tryConnect = 0;
 		rtcCount++;
 	}
@@ -321,7 +370,7 @@ static void SW_STACK_Init() {
 
 	// initialize google stack
 	GGL_DeviceDef device;
-	device.deviceId = "test-iot-device-2";
+	device.deviceId = "test-iot-device-3";
 	device.deviceRegistry = "greenfox-device-registry";
 	device.projectId = "static-aventurin-fuchsit";
 	device.region = "europe-west1";
