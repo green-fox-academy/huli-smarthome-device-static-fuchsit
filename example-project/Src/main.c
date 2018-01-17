@@ -223,12 +223,15 @@ static void SimpleMQTT_Example() {
  * @param  None
  * @retval None
  */
+
 int main(void) {
+
 	Peripherals_Init();
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
+
 
 	switch (EXAMPLE_KIND) {
 	case EXAMPLE_HTTPS_REST:
@@ -241,6 +244,9 @@ int main(void) {
 		SimpleMQTT_Example();
 		break;
 	}
+
+
+
 }
 
 static void WIFI_GoOnline(void) {
@@ -345,6 +351,33 @@ static void Peripherals_Init(void) {
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 	BSP_LED_Init(LED_GREEN);
+
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+
+	GPIO_InitTypeDef rgbblue;            // create a config structure
+	rgbblue.Pin = GPIO_PIN_15;            // this is about PIN 15
+	rgbblue.Mode = GPIO_MODE_OUTPUT_PP;  // Configure as output with push-up-down enabled
+	rgbblue.Pull = GPIO_PULLUP;        // the push-up-down should work as pulldown
+	rgbblue.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
+
+	HAL_GPIO_Init(GPIOA, &rgbblue);      // initialize the pin on GPIOA port with HAL;
+
+	GPIO_InitTypeDef rgbgreen;            // create a config structure
+	rgbgreen.Pin = GPIO_PIN_2;            // this is about PIN 2
+	rgbgreen.Mode = GPIO_MODE_OUTPUT_PP;  // Configure as output with push-up-down enabled
+	rgbgreen.Pull = GPIO_PULLUP;        // the push-up-down should work as pulldown
+	rgbgreen.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
+
+	HAL_GPIO_Init(GPIOA, &rgbgreen);      // initialize the pin on GPIOA port with HAL;
+
+	GPIO_InitTypeDef rgbred;            // create a config structure
+	rgbred.Pin = GPIO_PIN_7;            // this is about PIN 7
+	rgbred.Mode = GPIO_MODE_OUTPUT_PP;  // Configure as output with push-up-down enabled
+	rgbred.Pull = GPIO_PULLUP;        // the push-up-down should work as pulldown
+	rgbred.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
+
+	HAL_GPIO_Init(GPIOA, &rgbred);      // initialize the pin on GPIOA port with HAL;
+
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();
