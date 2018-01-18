@@ -43,6 +43,9 @@
 #define RED 	GPIOA, GPIO_PIN_15
 #define GREEN 	GPIOB, GPIO_PIN_1
 #define BLUE 	GPIOB, GPIO_PIN_4
+#define WriteRed 	TIM3->CCR4
+#define WriteGreen 	TIM3->CCR1
+#define WriteBlue 	TIM2->CCR1
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -86,28 +89,42 @@ static void Peripherals_Init(void);
 static void UART_Init(void);
 static void LED_Init(void);
 static void TIMER_Init(void);
-//static void PWM_Init(void);
-
+void make_colors(int r, int g, int b);
+struct LedCommon {
+   char  color[10];
+   int   toggle_sec;
+};
 /**
  * @brief  Main program
  * @param  None
  * @retval None
  */
+//TIM3->CCR4 == RED
 //TIM3->CCR1 == GREEN
 //TIM2->CCR1 == BLUE
-//TIM3->CCR4 == RED
 int main(void) {
 	Peripherals_Init();
 
-	TIM3->CCR1 = 0x00;
-	TIM2->CCR1 = 0xFF;
-	TIM3->CCR4 = 0x00;
+	int r = 0;
+	int g = 0;
+	int b = 0;
 
+	make_colors(r, g, b);
 
 	while(1){
 
 	}
 }
+
+void make_colors(int r, int g, int b) {
+
+		WriteRed = r;
+		WriteGreen = g;
+		WriteBlue = b;
+
+}
+
+
 
 static void Peripherals_Init(void) {
 	/* STM32L4xx HAL library initialization:
@@ -129,7 +146,6 @@ static void Peripherals_Init(void) {
 
 	UART_Init();
 	TIMER_Init();
-	//PWM_Init();
 	LED_Init();
 
 }
@@ -161,7 +177,7 @@ static void TIMER_Init(void) {
 	__HAL_RCC_TIM3_CLK_ENABLE();
 
 	Red.Instance               = TIM2;
-	Red.Init.Period            = 256; //16bit number max value 0xFFFF
+	Red.Init.Period            = 255; //max value 0xFF
 	Red.Init.Prescaler         = 0;
 	Red.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	Red.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -175,7 +191,7 @@ static void TIMER_Init(void) {
 
 
 	Green.Instance               = TIM3;
-	Green.Init.Period            = 256; //16bit number max value 0xFFFF
+	Green.Init.Period            = 255; //16bit number max value 0xFF
 	Green.Init.Prescaler         = 0;
 	Green.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	Green.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -189,7 +205,7 @@ static void TIMER_Init(void) {
 
 
 	Blue.Instance               = TIM3;
-	Blue.Init.Period            = 256; //16bit number max value 0xFFFF
+	Blue.Init.Period            = 255; //16bit number max value 0xFF
 	Blue.Init.Prescaler         = 0;
 	Blue.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	Blue.Init.CounterMode       = TIM_COUNTERMODE_UP;
