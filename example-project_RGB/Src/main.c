@@ -102,6 +102,8 @@ static void PWM_Init_BLUE(void);
 static void TIMER_Init_GREEN(void);
 static void PWM_Init_GREEN(void);
 
+static void LED_ON (int _red, int _blue, int _green);
+
 /**
  * @brief  Main program
  * @param  None
@@ -110,38 +112,43 @@ static void PWM_Init_GREEN(void);
 int main(void) {
 
 	Peripherals_Init();
+
+	char led_color[] = "FF80FF";
+
+
+
+	int red = 0x00;
+	int blue = 0xFF;
+	int green = 0x80;
+
 	while(1){
-		printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
-		//HAL_Delay(500);
+		//printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
 
+			LED_ON(red , blue , green);
+		/*
+		TIM3->RED = 0;
+		TIM3->BLUE = 0;
+		TIM2->GREEN = 0;
 
-		HAL_Delay(500);
-		TIM3->RED = 2000;
-		TIM3->BLUE = 2000;
-		TIM2->GREEN = 2000;
 		HAL_Delay(500);
 		TIM3->RED = 1500;
 		TIM3->BLUE = 1500;
 		TIM2->GREEN = 1500;
+		HAL_Delay(500);
+		TIM3->RED = 500;
+		TIM3->BLUE = 500;
+		TIM2->GREEN = 500;
 
-		//TIM5->CCR1 = 0;
-
-
-
-
-		//HAL_GPIO_WritePin(REDPORT , REDPIN , 1);
-/*
-		BSP_LED_On(LED_GREEN);
 */
-/*
-		if (TIM1->CNT <= 1000) {
-			HAL_GPIO_WritePin(BLUEPORT, BLUEPIN, 0);
-		} else {
-			HAL_GPIO_WritePin(BLUEPORT, BLUEPIN, 1);
-		}
-*/
-
 	}
+}
+
+static void LED_ON (int _red, int _blue, int _green){
+
+	TIM3->RED = _red;
+	TIM3->BLUE = _blue;
+	TIM2->GREEN = _green;
+
 }
 
 static void Peripherals_Init(void) {
@@ -191,7 +198,7 @@ static void PWM_Init_RED(void) {
 	HAL_TIM_PWM_Init(&TimHandleR);
 
 	sConfigR.OCMode = TIM_OCMODE_PWM1;
-	sConfigR.Pulse = 2000;
+	sConfigR.Pulse = 257;
 	HAL_TIM_PWM_ConfigChannel(&TimHandleR , &sConfigR , TIM_CHANNEL_3);
 
 	HAL_TIM_PWM_Start(&TimHandleR , TIM_CHANNEL_3);
@@ -202,7 +209,7 @@ static void PWM_Init_BLUE(void) {
 	HAL_TIM_PWM_Init(&TimHandleB);
 
 	sConfigB.OCMode = TIM_OCMODE_PWM1;
-	sConfigB.Pulse = 2000;
+	sConfigB.Pulse = 257;
 	HAL_TIM_PWM_ConfigChannel(&TimHandleB , &sConfigB , TIM_CHANNEL_2);
 
 	HAL_TIM_PWM_Start(&TimHandleB , TIM_CHANNEL_2);
@@ -212,7 +219,7 @@ static void PWM_Init_GREEN(void) {
 	HAL_TIM_PWM_Init(&TimHandleG);
 
 	sConfigG.OCMode = TIM_OCMODE_PWM1;
-	sConfigG.Pulse = 2000;
+	sConfigG.Pulse = 257;
 	HAL_TIM_PWM_ConfigChannel(&TimHandleG , &sConfigG , TIM_CHANNEL_1);
 
 	HAL_TIM_PWM_Start(&TimHandleG , TIM_CHANNEL_1);
@@ -223,7 +230,7 @@ static void TIMER_Init_RED(void) {
 	__HAL_RCC_TIM3_CLK_ENABLE();
 
 	TimHandleR.Instance               = TIM3;
-	TimHandleR.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleR.Init.Period            = 255; //16bit number max value 0xFFFF
 	TimHandleR.Init.Prescaler         = 0;
 	TimHandleR.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	TimHandleR.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -238,7 +245,7 @@ static void TIMER_Init_BLUE(void) {
 	//__HAL_RCC_TIM3_CLK_ENABLE();
 
 	TimHandleB.Instance               = TIM3;
-	TimHandleB.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleB.Init.Period            = 255; //16bit number max value 0xFFFF
 	TimHandleB.Init.Prescaler         = 0;
 	TimHandleB.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	TimHandleB.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -252,7 +259,7 @@ static void TIMER_Init_GREEN(void) {
 	__HAL_RCC_TIM2_CLK_ENABLE();
 
 	TimHandleG.Instance               = TIM2;
-	TimHandleG.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleG.Init.Period            = 255; //16bit number max value 0xFFFF
 	TimHandleG.Init.Prescaler         = 0;
 	TimHandleG.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	TimHandleG.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -287,7 +294,7 @@ static void LED_Init_BLUE(void) {
 	HAL_GPIO_Init(BLUEPORT, &LEDBLUE);   // initialize the pin on GPIO* port with HAL
 }
 static void LED_Init_GREEN(void) {
-	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
+	//__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
 	LEDGREEN.Pin = GREENPIN;            // this is about PIN 1
 	LEDGREEN.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
