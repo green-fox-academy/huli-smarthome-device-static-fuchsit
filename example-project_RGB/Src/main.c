@@ -38,6 +38,15 @@
 
 #define REDPORT GPIOB
 #define REDPIN GPIO_PIN_0
+#define RED CCR3
+
+#define BLUEPORT GPIOA
+#define BLUEPIN GPIO_PIN_7
+#define BLUE CCR2
+
+#define GREENPORT GPIOA
+#define GREENPIN GPIO_PIN_15
+#define GREEN CCR1
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -64,10 +73,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 UART_HandleTypeDef	uartHandle;
-TIM_HandleTypeDef	TimHandle;
-TIM_OC_InitTypeDef	sConfig;
+TIM_HandleTypeDef	TimHandleR;
+TIM_HandleTypeDef	TimHandleB;
+TIM_HandleTypeDef	TimHandleG;
+TIM_OC_InitTypeDef	sConfigR;
+TIM_OC_InitTypeDef	sConfigB;
+TIM_OC_InitTypeDef	sConfigG;
 GPIO_InitTypeDef	LEDRED;            // create a config structure
-
+GPIO_InitTypeDef	LEDBLUE;
+GPIO_InitTypeDef	LEDGREEN;
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -75,9 +89,18 @@ static void SystemClock_Config(void);
 /* Private functions ---------------------------------------------------------*/
 static void Peripherals_Init(void);
 static void UART_Init(void);
-static void LED_Init(void);
-static void TIMER_Init(void);
-static void PWM_Init(void);
+static void LED_Init_RED(void);
+static void LED_Init_BLUE(void);
+static void LED_Init_GREEN(void);
+
+static void TIMER_Init_RED(void);
+static void PWM_Init_RED(void);
+
+static void TIMER_Init_BLUE(void);
+static void PWM_Init_BLUE(void);
+
+static void TIMER_Init_GREEN(void);
+static void PWM_Init_GREEN(void);
 
 /**
  * @brief  Main program
@@ -88,23 +111,36 @@ int main(void) {
 
 	Peripherals_Init();
 	while(1){
-		printf("%d\n" , TIM3->CNT);
+		printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
+		//HAL_Delay(500);
+
+
 		HAL_Delay(500);
-		TIM3->CCR3 = 2000;
+		TIM3->RED = 2000;
+		TIM3->BLUE = 2000;
+		TIM2->GREEN = 2000;
 		HAL_Delay(500);
-		TIM3->CCR3 = 1000;
-		HAL_Delay(500);
-		TIM3->CCR3 = 0;
-	//	HAL_GPIO_WritePin(REDLED, 1);
+		TIM3->RED = 1500;
+		TIM3->BLUE = 1500;
+		TIM2->GREEN = 1500;
+
+		//TIM5->CCR1 = 0;
+
+
+
+
+		//HAL_GPIO_WritePin(REDPORT , REDPIN , 1);
 /*
 		BSP_LED_On(LED_GREEN);
-
-		if (TIM2->CNT <= 1000) {
-			HAL_GPIO_WritePin(REDLED, 0);
+*/
+/*
+		if (TIM1->CNT <= 1000) {
+			HAL_GPIO_WritePin(BLUEPORT, BLUEPIN, 0);
 		} else {
-			HAL_GPIO_WritePin(REDLED, 1);
+			HAL_GPIO_WritePin(BLUEPORT, BLUEPIN, 1);
 		}
 */
+
 	}
 }
 
@@ -127,9 +163,17 @@ static void Peripherals_Init(void) {
 	BSP_LED_Init(LED_GREEN);
 
 	UART_Init();
-	TIMER_Init();
-	PWM_Init();
-	LED_Init();
+
+	TIMER_Init_RED();
+	PWM_Init_RED();
+	TIMER_Init_BLUE();
+	PWM_Init_BLUE();
+	TIMER_Init_GREEN();
+	PWM_Init_GREEN();
+
+	LED_Init_RED();
+	LED_Init_BLUE();
+	LED_Init_GREEN();
 
 }
 
@@ -143,32 +187,82 @@ static void UART_Init(void) {
 	BSP_COM_Init(COM1, &uartHandle);
 }
 
-static void PWM_Init(void) {
-	HAL_TIM_PWM_Init(&TimHandle);
+static void PWM_Init_RED(void) {
+	HAL_TIM_PWM_Init(&TimHandleR);
 
-	sConfig.OCMode = TIM_OCMODE_PWM1;
-	sConfig.Pulse = 2000;
-	HAL_TIM_PWM_ConfigChannel(&TimHandle , &sConfig , TIM_CHANNEL_3);
+	sConfigR.OCMode = TIM_OCMODE_PWM1;
+	sConfigR.Pulse = 2000;
+	HAL_TIM_PWM_ConfigChannel(&TimHandleR , &sConfigR , TIM_CHANNEL_3);
 
-	HAL_TIM_PWM_Start(&TimHandle , TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&TimHandleR , TIM_CHANNEL_3);
 }
 
-static void TIMER_Init(void) {
+
+static void PWM_Init_BLUE(void) {
+	HAL_TIM_PWM_Init(&TimHandleB);
+
+	sConfigB.OCMode = TIM_OCMODE_PWM1;
+	sConfigB.Pulse = 2000;
+	HAL_TIM_PWM_ConfigChannel(&TimHandleB , &sConfigB , TIM_CHANNEL_2);
+
+	HAL_TIM_PWM_Start(&TimHandleB , TIM_CHANNEL_2);
+}
+
+static void PWM_Init_GREEN(void) {
+	HAL_TIM_PWM_Init(&TimHandleG);
+
+	sConfigG.OCMode = TIM_OCMODE_PWM1;
+	sConfigG.Pulse = 2000;
+	HAL_TIM_PWM_ConfigChannel(&TimHandleG , &sConfigG , TIM_CHANNEL_1);
+
+	HAL_TIM_PWM_Start(&TimHandleG , TIM_CHANNEL_1);
+}
+
+
+static void TIMER_Init_RED(void) {
 	__HAL_RCC_TIM3_CLK_ENABLE();
 
-	TimHandle.Instance               = TIM3;
-	TimHandle.Init.Period            = 2000; //16bit number max value 0xFFFF
-	TimHandle.Init.Prescaler         = 0;
-	TimHandle.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-	TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;
+	TimHandleR.Instance               = TIM3;
+	TimHandleR.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleR.Init.Prescaler         = 0;
+	TimHandleR.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+	TimHandleR.Init.CounterMode       = TIM_COUNTERMODE_UP;
 
-	HAL_TIM_Base_Init(&TimHandle); //Configure the timer
+	HAL_TIM_Base_Init(&TimHandleR); //Configure the timer
 
 	//HAL_TIM_Base_Start(&TimHandle);
 
 }
 
-static void LED_Init(void) {
+static void TIMER_Init_BLUE(void) {
+	//__HAL_RCC_TIM3_CLK_ENABLE();
+
+	TimHandleB.Instance               = TIM3;
+	TimHandleB.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleB.Init.Prescaler         = 0;
+	TimHandleB.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+	TimHandleB.Init.CounterMode       = TIM_COUNTERMODE_UP;
+
+	HAL_TIM_Base_Init(&TimHandleB); //Configure the timer
+
+	//HAL_TIM_Base_Start(&TimHandleB);
+}
+
+static void TIMER_Init_GREEN(void) {
+	__HAL_RCC_TIM2_CLK_ENABLE();
+
+	TimHandleG.Instance               = TIM2;
+	TimHandleG.Init.Period            = 2000; //16bit number max value 0xFFFF
+	TimHandleG.Init.Prescaler         = 0;
+	TimHandleG.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+	TimHandleG.Init.CounterMode       = TIM_COUNTERMODE_UP;
+
+	HAL_TIM_Base_Init(&TimHandleG); //Configure the timer
+
+	//HAL_TIM_Base_Start(&TimHandleG);
+}
+
+static void LED_Init_RED(void) {
 
 	__HAL_RCC_GPIOB_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
@@ -179,39 +273,29 @@ static void LED_Init(void) {
 	LEDRED.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
 
 	HAL_GPIO_Init(REDPORT, &LEDRED);   // initialize the pin on GPIO* port with HAL
+}
 
-/*
+static void LED_Init_BLUE(void) {
+	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
-	__HAL_RCC_GPIOC_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
-
-	GPIO_InitTypeDef LEDGREEN;            // create a config structure
-	LEDGREEN.Pin = GPIO_PIN_1;            // this is about PIN 1
-	LEDGREEN.Mode = GPIO_MODE_OUTPUT_OD; // Configure as output with push-up-down enabled
-	LEDGREEN.Pull = GPIO_PULLDOWN;      // the push-up-down should work as pulldown
-	LEDGREEN.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
-	//LEDBLUE.Alternate = GPIO_AF1_TIM1;   //Alterante function to set PWM timer
-
-	HAL_GPIO_Init(GPIOC, &LEDGREEN);   // initialize the pin on GPIO* port with HAL
-
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1 , GPIO_PIN_SET);
-
-
-	__HAL_RCC_GPIOC_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
-
-	GPIO_InitTypeDef LEDBLUE;            // create a config structure
-	LEDBLUE.Pin = GPIO_PIN_3;            // this is about PIN 1
-	LEDBLUE.Mode = GPIO_MODE_OUTPUT_OD; // Configure as output with push-up-down enabled
-	LEDBLUE.Pull = GPIO_PULLDOWN;      // the push-up-down should work as pulldown
+	LEDBLUE.Pin = BLUEPIN;            // this is about PIN 1
+	LEDBLUE.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
+	LEDBLUE.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
 	LEDBLUE.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
-	//LEDBLUE.Alternate = GPIO_AF1_TIM1;   //Alterante function to set PWM timer
+	LEDBLUE.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
 
-	HAL_GPIO_Init(GPIOC, &LEDBLUE);   // initialize the pin on GPIO* port with HAL
+	HAL_GPIO_Init(BLUEPORT, &LEDBLUE);   // initialize the pin on GPIO* port with HAL
+}
+static void LED_Init_GREEN(void) {
+	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3 , GPIO_PIN_SET);
+	LEDGREEN.Pin = GREENPIN;            // this is about PIN 1
+	LEDGREEN.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
+	LEDGREEN.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
+	LEDGREEN.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
+	LEDGREEN.Alternate = GPIO_AF1_TIM2;   //Alterante function to set PWM timer
 
-
-*/
-
+	HAL_GPIO_Init(GREENPORT, &LEDGREEN);   // initialize the pin on GPIO* port with HAL
 }
 
 /**
