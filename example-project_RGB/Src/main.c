@@ -37,15 +37,7 @@
 #include "main.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-
-
-#define RED 	GPIOA, GPIO_PIN_15
-#define GREEN 	GPIOB, GPIO_PIN_1
-#define BLUE 	GPIOB, GPIO_PIN_4
-#define WriteRed 	TIM3->CCR4
-#define WriteGreen 	TIM3->CCR1
-#define WriteBlue 	TIM2->CCR1
+#include "RGB_controll.h"
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -72,28 +64,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 UART_HandleTypeDef	uartHandle;
-TIM_HandleTypeDef	Red;
-TIM_OC_InitTypeDef 	RedPwmHandle;
-TIM_HandleTypeDef	Green;
-TIM_OC_InitTypeDef 	GreenPwmHandle;
-TIM_HandleTypeDef	Blue;
-TIM_OC_InitTypeDef 	BluePwmHandle;
-
-
-
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
+void Peripherals_Init(void);
 
 /* Private functions ---------------------------------------------------------*/
-static void Peripherals_Init(void);
-static void UART_Init(void);
-static void LED_Init(void);
-static void TIMER_Init(void);
-void make_colors(int r, int g, int b);
-struct LedCommon {
-   char  color[10];
-   int   toggle_sec;
-};
+
 /**
  * @brief  Main program
  * @param  None
@@ -105,28 +81,12 @@ struct LedCommon {
 int main(void) {
 	Peripherals_Init();
 
-	int r = 0;
-	int g = 0;
-	int b = 0;
-
-	make_colors(r, g, b);
-
 	while(1){
-
+		colors_init(0, 255, 0);
 	}
 }
 
-void make_colors(int r, int g, int b) {
-
-		WriteRed = r;
-		WriteGreen = g;
-		WriteBlue = b;
-
-}
-
-
-
-static void Peripherals_Init(void) {
+void Peripherals_Init(void) {
 	/* STM32L4xx HAL library initialization:
 	 - Configure the Flash prefetch, Flash preread and Buffer caches
 	 - Systick timer is configured by default as source of time base, but user
@@ -140,119 +100,10 @@ static void Peripherals_Init(void) {
 
 	/* Configure the System clock to have a frequency of 80 MHz */
 	SystemClock_Config();
-
-	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
-	BSP_LED_Init(LED_GREEN);
-
-	UART_Init();
 	TIMER_Init();
 	LED_Init();
 
 }
-
-static void UART_Init(void) {
-	uartHandle.Init.BaudRate 	= 115200;
-	uartHandle.Init.WordLength 	= UART_WORDLENGTH_8B;
-	uartHandle.Init.StopBits 	= UART_STOPBITS_1;
-	uartHandle.Init.Parity 		= UART_PARITY_NONE;
-	uartHandle.Init.HwFlowCtl   = UART_HWCONTROL_NONE;
-	uartHandle.Init.Mode 		= UART_MODE_TX_RX;
-
-	BSP_COM_Init(COM1, &uartHandle);
-}
-
-/*static void PWM_Init(void) {
-	HAL_TIM_PWM_Init(&TimHandle);
-
-	sConfig.OCMode = TIM_OCMODE_PWM1;
-	sConfig.Pulse = 2000;
-	HAL_TIM_PWM_ConfigChannel(&TimHandle , &sConfig , TIM_CHANNEL_3);
-
-	HAL_TIM_PWM_Start(&TimHandle , TIM_CHANNEL_3);
-}*/
-
-static void TIMER_Init(void) {
-
-	__HAL_RCC_TIM2_CLK_ENABLE();
-	__HAL_RCC_TIM3_CLK_ENABLE();
-
-	Red.Instance               = TIM2;
-	Red.Init.Period            = 255; //max value 0xFF
-	Red.Init.Prescaler         = 0;
-	Red.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-	Red.Init.CounterMode       = TIM_COUNTERMODE_UP;
-
-	RedPwmHandle.OCMode 	= TIM_OCMODE_PWM1;
-	RedPwmHandle.Pulse 		= 0;
-
-	HAL_TIM_PWM_ConfigChannel(&Red, &RedPwmHandle, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Init(&Red);
-	HAL_TIM_PWM_Start(&Red, TIM_CHANNEL_1);
-
-
-	Green.Instance               = TIM3;
-	Green.Init.Period            = 255; //16bit number max value 0xFF
-	Green.Init.Prescaler         = 0;
-	Green.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-	Green.Init.CounterMode       = TIM_COUNTERMODE_UP;
-
-	GreenPwmHandle.OCMode 	= TIM_OCMODE_PWM1;
-	GreenPwmHandle.Pulse 	= 0;
-
-	HAL_TIM_PWM_ConfigChannel(&Green, &GreenPwmHandle, TIM_CHANNEL_4);
-	HAL_TIM_PWM_Init(&Green); //Configure the timer
-	HAL_TIM_PWM_Start(&Green, TIM_CHANNEL_4);
-
-
-	Blue.Instance               = TIM3;
-	Blue.Init.Period            = 255; //16bit number max value 0xFF
-	Blue.Init.Prescaler         = 0;
-	Blue.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-	Blue.Init.CounterMode       = TIM_COUNTERMODE_UP;
-
-	BluePwmHandle.OCMode = TIM_OCMODE_PWM1;
-	BluePwmHandle.Pulse = 0;
-
-	HAL_TIM_PWM_ConfigChannel(&Blue, &BluePwmHandle, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Init(&Blue);
-	HAL_TIM_PWM_Start(&Blue, TIM_CHANNEL_1);
-
-}
-
-static void LED_Init(void) {
-
-	__HAL_RCC_GPIOB_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
-	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
-
-	GPIO_InitTypeDef LEDRED;
-	LEDRED.Pin 			= GPIO_PIN_15;            // this is about PIN 1
-	LEDRED.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDRED.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDRED.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDRED.Alternate 	= GPIO_AF1_TIM2;   //Alterante function to set PWM timer
-
-	HAL_GPIO_Init(GPIOA, &LEDRED);   // initialize the pin on GPIO* port with HAL
-
-	GPIO_InitTypeDef LEDGREEN;
-	LEDGREEN.Pin 		= GPIO_PIN_1;            // this is about PIN 1
-	LEDGREEN.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDGREEN.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDGREEN.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDGREEN.Alternate 	= GPIO_AF2_TIM3;   //Alterante function to set PWM timer
-
-	HAL_GPIO_Init(GPIOB, &LEDGREEN);   // initialize the pin on GPIO* port with HAL
-
-	GPIO_InitTypeDef LEDBLUE;
-	LEDBLUE.Pin 		= GPIO_PIN_4;            // this is about PIN 1
-	LEDBLUE.Mode 		= GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
-	LEDBLUE.Pull 		= GPIO_NOPULL;      // the push-up-down should work as pulldown
-	LEDBLUE.Speed 		= GPIO_SPEED_HIGH;     // we need a high-speed output
-	LEDBLUE.Alternate 	= GPIO_AF2_TIM3;   //Alterante function to set PWM timer
-
-	HAL_GPIO_Init(GPIOB, &LEDBLUE);   // initialize the pin on GPIO* port with HAL
-
-}
-
 /**
  * @brief  System Clock Configuration
  *         The system Clock is configured as follow :
