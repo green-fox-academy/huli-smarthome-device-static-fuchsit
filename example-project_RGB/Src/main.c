@@ -82,7 +82,7 @@ int main(void) {
 	Peripherals_Init();
 
 	while(1){
-		colors_init(0, 255, 0);
+		colors_init(0, 0, 0);
 	}
 }
 
