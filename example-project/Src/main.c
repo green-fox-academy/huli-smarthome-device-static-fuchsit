@@ -128,6 +128,65 @@ static void UART_Init(void);
 static void RNG_Init(void);
 static void WIFI_GoOnline(void);
 
+int MQTT_HandleMessageCallback(const char* topic, const char* message);
+int HandleClientCallback(NetTransportContext *ctx);
+void HTTPSServerStart();
+static void Wolfmqtt_PublishReceive(const char *host, int port);
+static void SimpleMQTT_Example();
+
+int HandleClientCallback_SSDP(NetTransportContext *ctx);
+void HTTP_SSDP_ServerStart();
+
+/**
+ * @brief  Main program
+ * @param  None
+ * @retval None
+ */
+int main(void) {
+
+
+	Peripherals_Init();
+
+	SW_STACK_Init();
+
+	WIFI_GoOnline();
+
+	conf_t conf;
+	device_config_t device;
+	device.state_of_device = STATE_SSDP_DISCOVERY;
+
+	/*printf("hello\n");
+	parse_JSON(&conf, JSON_STRING);
+	printf("conf dev: %s\n", conf.device);*/
+
+	while (1) {
+
+		switch (device.state_of_device) {
+		case STATE_SSDP_DISCOVERY:
+			printf("entered SSDP state\n");
+			HAL_Delay(500);
+			HTTP_SSDP_ServerStart();
+			device.state_of_device = STATE_HTTP_SERVER;
+			break;
+		case STATE_HTTP_SERVER:
+			printf("entered HTTP state\n");
+			HTTPSServerStart();
+			HAL_Delay(500);
+			device.state_of_device = STATE_MQTT;
+			break;
+		case STATE_MQTT:
+			printf("entered MQTT state\n");
+			HAL_Delay(500);
+			device.state_of_device = STATE_SSDP_DISCOVERY;
+//			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+			SimpleMQTT_Example();
+			break;
+		}
+	}
+
+}
+// end of main()
+
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
 	return 0;
@@ -142,7 +201,7 @@ int HandleClientCallback(NetTransportContext *ctx) {
 		return 0;
 	}
 	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"test_value\"}";
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
 	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
@@ -150,10 +209,48 @@ int HandleClientCallback(NetTransportContext *ctx) {
 	return 0;
 }
 
-
 void HTTPSServerStart() {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
+	if (rc != 0) {
+		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
+		return;
+	}
+}
+
+int HandleClientCallback_SSDP(NetTransportContext *ctx) {
+	char buff[512];
+
+	int rc = net_Receive(ctx, buff, 512, 2000);
+	if (rc < 0) {
+		printf("ERROR: could not receive data: %d\r\n", rc);
+		return 0;
+	}
+
+	printf("buff: %s\n", buff);
+
+	if (strstr(buff, "fuchsit")) {
+		printf("i found fuchsit\n");
+	}
+
+	char snd[] =
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"teszt_sspd_response\"}";
+	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
+		printf("ERROR: could not send response: %d\r\n", rc);
+		return 0;
+	}
+
+	if (strstr(buff, "fuchsit")) {
+		return 10;
+	} else {
+		return 0;
+	}
+}
+
+
+void HTTP_SSDP_ServerStart() {
+	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
+	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -193,7 +290,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 }
 
 static void SimpleMQTT_Example() {
-	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
+	int rc = MqttClient_NetConnect(&mqttClient, "m2m.eclipse.org", 1883, 2000,
 			0, NULL);
 	if (rc != MQTT_CODE_SUCCESS) {
 		printf("ERROR MqttClient_NetConnect rc=%d\r\n", rc);
@@ -202,7 +299,7 @@ static void SimpleMQTT_Example() {
 
 	printf("after mqqt client netconnect\n");
 	MqttConnect connect;
-	connect.client_id = "test cli ID";
+	connect.client_id = "733e030f798749a2815aba56dfe9e973";
 	connect.clean_session = 1;
 	connect.keep_alive_sec = 30;
 	rc = MqttClient_Connect(&mqttClient, &connect);
@@ -215,7 +312,7 @@ static void SimpleMQTT_Example() {
 	printf("after mqqt client connect\n");
 	MqttPublish pub;
 	XMEMSET(&pub, 0, sizeof(MqttPublish));
-	pub.buffer = (byte*)"Test message";
+	pub.buffer = (byte*)"{ \"key\": \"value\" }";
 	pub.buffer_len = strlen((char*)pub.buffer);
 	pub.topic_name = "ptopic";
 	pub.qos = MQTT_QOS_0;
@@ -243,51 +340,6 @@ static void SimpleMQTT_Example() {
 	}
 }
 
-/**
- * @brief  Main program
- * @param  None
- * @retval None
- */
-int main(void) {
-	Peripherals_Init();
-
-	SW_STACK_Init();
-
-	WIFI_GoOnline();
-
-	conf_t conf;
-
-	printf("hello\n");
-	parse_JSON(&conf, JSON_STRING);
-	printf("conf dev: %s\n", conf.device);
-
-	int state = STATE_SSDP_DISCOVERY;
-
-	while (1) {
-
-		switch (state) {
-		case STATE_SSDP_DISCOVERY:
-			printf("entered SSDP state\n");
-			HAL_Delay(500);
-			state = STATE_HTTP_SERVER;
-			break;
-		case STATE_HTTP_SERVER:
-			printf("entered HTTP state\n");
-			HTTPSServerStart();
-			HAL_Delay(500);
-			state = STATE_MQTT;
-			break;
-		case STATE_MQTT:
-			printf("entered MQTT state\n");
-			HAL_Delay(500);
-			state = STATE_SSDP_DISCOVERY;
-//			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
-//			SimpleMQTT_Example();
-			break;
-		}
-	}
-
-}
 
 static void WIFI_GoOnline(void) {
 	uint8_t online = 0;
@@ -400,6 +452,8 @@ static void Peripherals_Init(void) {
 	 */
 	HAL_Init();
 
+
+
 	/* Configure the System clock to have a frequency of 80 MHz */
 	SystemClock_Config();
 
@@ -412,6 +466,7 @@ static void Peripherals_Init(void) {
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();
+
 }
 
 void EXTI15_10_IRQHandler() {
