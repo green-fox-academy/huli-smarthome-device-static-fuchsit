@@ -46,6 +46,27 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 
+/*
+ * This enum holds the different states of the operation
+ */
+typedef enum State_Of_Operation {
+	STATE_SSDP_DISCOVERY, // waiting for the correct ssdp discovery packet to arrive
+	STATE_HTTPS_SERVER,   // on receiving GET /getDeviceParams returns device params, on POST updates device config
+	STATE_GGL_CORE,     // connects and subscribes to ggl iot core in MQTT SSL mode
+	STATE_MQTT,           // listens to commands from the subscribed iot core topics in test mode
+} State_Of_Operation;
+
+/*
+ * This struct will carry all configuration information for the given IoT device
+ */
+typedef struct device_config{
+    char *device_name;
+    char *device_id;
+    char *device_ip;
+    int device_port[12];
+    State_Of_Operation state_of_device;
+} device_config_t;
+
 #endif /* __MAIN_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

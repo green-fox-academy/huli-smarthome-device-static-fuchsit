@@ -33,6 +33,16 @@ m * @file    Templates/Src/main.c
  ******************************************************************************
  */
 
+/*
+ * TODO
+ * - add code to handle disconnection from internet or power grid
+ *  by saving actual state when state is changed to device
+ * 	EPROM memory
+ * - device should be able to reload the given state, if that is not working, it shoud enter to
+ *   initialization mode (add exponential backoff; see example at google policy
+ *   and https://en.wikipedia.org/wiki/Exponential_backoff)
+ */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "wolfssl/ssl.h"
@@ -46,11 +56,13 @@ m * @file    Templates/Src/main.c
 #include "rtc_utils.h"
 #include "jsmn.h"
 
-#define EXAMPLE_KIND	EXAMPLE_HTTPS_REST
 #define NEED_WIFI		1
 
 #define NTP_MAX_RETRY_COUNT			10
 #define NTP_RETRY_INTERVAL_MS		10000
+
+#define SSPD_DISCOVERY_SUCCESS		-5
+#define HTTPS_SUCCESS				-6
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -60,38 +72,12 @@ m * @file    Templates/Src/main.c
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
-/** @addtogroup STM32L4xx_HAL_Examples
- * @{
- */
-
-/** @addtogroup Templates
- * @{
- */
-
 /* Private typedef -----------------------------------------------------------*/
 
 uint32_t socketId = 0;
+
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
-typedef enum ExampleKind {
-	EXAMPLE_SIMPLE_MQTT, /*EXAMPLE_MQTT*/ EXAMPLE_HTTPS_REST,
-} ExampleKind;
-
-typedef enum State_Of_Operation {
-	STATE_SSDP_DISCOVERY, 	// waiting for the correct ssdp discovery packet to arrive
-	STATE_HTTP_SERVER,		// on receiving GET /getDeviceParams returns device params, on POST updates device config
-	CONNECT_GGL_CORE,		// connects and subscribes to ggl iot core
-	STATE_MQTT,				// listens to commands from the subscribed iot core topics
-	EXAMPLE_MQTT
-} State_Of_Operation;
-
-typedef struct device_config{
-    char *device;
-    char *id;
-    char *ip;
-    int port[12];
-    State_Of_Operation state_of_device;
-} device_config_t;
 
 /* Private define ------------------------------------------------------------*/
 #define SSID     "A66 Guest"
@@ -108,10 +94,12 @@ MQTT_NetInitTypeDef mqttConfig;
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
 
-
+/*
+ * added to test JSON parser
+ */
 static const char *JSON_STRING =
-	"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
-	"}";
+									"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
+									"}";
 
 extern MqttClient mqttClient;
 
@@ -129,62 +117,62 @@ static void UART_Init(void);
 static void RNG_Init(void);
 static void WIFI_GoOnline(void);
 
-int MQTT_HandleMessageCallback(const char* topic, const char* message);
-int HandleClientCallback(NetTransportContext *ctx);
+/*
+ * functions for SSDP discovery mode
+ */
+void HTTP_SSDP_ServerStart();
+int HandleClientCallback_SSDP(NetTransportContext *ctx);
+/*
+ * functions for HTTPS mode
+ */
 void HTTPSServerStart();
+int HandleClientCallback_HTTPS(NetTransportContext *ctx);
+
+int MQTT_HandleMessageCallback(const char* topic, const char* message);
 static void Wolfmqtt_PublishReceive(const char *host, int port);
 static void SimpleMQTT_Example();
-
-int HandleClientCallback_SSDP(NetTransportContext *ctx);
-void HTTP_SSDP_ServerStart();
 
 /**
  * @brief  Main program
  * @param  None
  * @retval None
  */
-int main(void) {
-
-
+int main(void)
+{
 	Peripherals_Init();
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
 
-	conf_t conf;
+	//conf_t conf; // struct for testing JSON parser
 	device_config_t device;
-	device.state_of_device = EXAMPLE_MQTT;
+	device.state_of_device = STATE_SSDP_DISCOVERY;
 
-	/*printf("hello\n");
-	parse_JSON(&conf, JSON_STRING);
-	printf("conf dev: %s\n", conf.device);*/
+	/* to test JSMN parser*/
+	parse_JSON(&device, JSON_STRING);
+	printf("conf dev: %s\n", device.device_name);
 
 	while (1) {
 
 		switch (device.state_of_device) {
 		case STATE_SSDP_DISCOVERY:
 			printf("entered SSDP state\n");
-			HAL_Delay(500);
 			HTTP_SSDP_ServerStart();
-			device.state_of_device = STATE_HTTP_SERVER;
+			device.state_of_device = STATE_HTTPS_SERVER;
 			break;
-		case STATE_HTTP_SERVER:
-			printf("entered HTTP state\n");
+		case STATE_HTTPS_SERVER:
+			printf("entered HTTPS state\n");
 			HTTPSServerStart();
-			HAL_Delay(500);
 			device.state_of_device = STATE_MQTT;
 			break;
-		case EXAMPLE_MQTT:
-			printf("entered MQTT state\n");
-			HAL_Delay(500);
-			//SimpleMQTT_Example();
+		case STATE_MQTT:
+			printf("entered simple MQTT state\n");
+			SimpleMQTT_Example();
+			break;
+		case STATE_GGL_CORE:
+			printf("entered GGL MQTT state\n");
 			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
-			while (1) {
-
-			}
-//			device.state_of_device = STATE_SSDP_DISCOVERY;
-//			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
 			break;
 		}
 	}
@@ -197,7 +185,7 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	return 0;
 }
 
-int HandleClientCallback(NetTransportContext *ctx) {
+int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	char buff[512];
 
 	int rc = net_TLSReceive(ctx, buff, 512, 2000);
@@ -211,11 +199,19 @@ int HandleClientCallback(NetTransportContext *ctx) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
-	return 0;
+
+	/*
+	 * if "getDeviceParams" is found in the incoming buffer, state is promted to next state
+	 */
+	if (strstr(buff, "getDeviceParams")) {
+		return HTTPS_SUCCESS;
+	} else {
+		return 0;
+	}
 }
 
 void HTTPSServerStart() {
-	net_TLSSetHandleClientConnectionCallback(HandleClientCallback);
+	net_TLSSetHandleClientConnectionCallback(HandleClientCallback_HTTPS);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
@@ -232,10 +228,10 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 		return 0;
 	}
 
+	/* printing the whole received buffer for test purposes*/
 	printf("buff: %s\n", buff);
-
 	if (strstr(buff, "fuchsit")) {
-		printf("i found fuchsit\n");
+		printf("i found fuchsit keyword\n");
 	}
 
 	char snd[] =
@@ -245,8 +241,11 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 		return 0;
 	}
 
+	/*
+	 * if "fuchsit" is found in the incoming buffer, state is promted to next state
+	 */
 	if (strstr(buff, "fuchsit")) {
-		return 10;
+		return SSPD_DISCOVERY_SUCCESS;
 	} else {
 		return 0;
 	}
@@ -396,7 +395,7 @@ static void WIFI_GoOnline(void) {
 
 		if (rc != 0) {
 			printf("Total facepalm, could not get NTP timestamp!\r\n");
-			//explodeAll();
+			//explodeAll(); jk
 		} else {
 			RTCUtils_SetEpochTimestamp(ntpResult);
 			rtcSet = 1;
@@ -460,8 +459,6 @@ static void Peripherals_Init(void) {
 	 - Low Level Initialization
 	 */
 	HAL_Init();
-
-
 
 	/* Configure the System clock to have a frequency of 80 MHz */
 	SystemClock_Config();

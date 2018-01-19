@@ -1,3 +1,25 @@
+/**
+Copyright (c) 2010 Serge A. Zaitsev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
+
 #include "jsmn.h"
 
 /**
@@ -341,7 +363,7 @@ char *strndup(const char *s1, size_t n)
  * pares up a JSON string, which has a known structure and the token num can be determined
  */
 
-int parse_JSON(conf_t *conf_struct, char *JSON_STRING) {
+int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 	int i;
 	int r;
 	jsmn_parser p;
@@ -366,7 +388,7 @@ int parse_JSON(conf_t *conf_struct, char *JSON_STRING) {
 			/* We may use strndup() to fetch string value */
 			printf("- device: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
-            conf_struct->device = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+            conf_struct->device_name = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 
 			i++;
 		} else if (jsoneq(JSON_STRING, &t[i], "id") == 0) {
