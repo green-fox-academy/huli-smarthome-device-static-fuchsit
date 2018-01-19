@@ -104,6 +104,8 @@ static void PWM_Init_GREEN(void);
 
 static void LED_ON (int _red, int _blue, int _green);
 
+static void LED_OFF (void);
+
 /**
  * @brief  Main program
  * @param  None
@@ -113,9 +115,9 @@ int main(void) {
 
 	Peripherals_Init();
 
-	int red = 0x80;
-	int blue = 0x80;
-	int green = 0x80;
+	int red = 0xF0;
+	int blue = 0xF0;
+	int green = 0x101;
 
 	while(1){
 		printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
@@ -124,7 +126,9 @@ int main(void) {
 		BSP_LED_Toggle(LED_GREEN);
 		HAL_Delay(500);
 
-			LED_ON(red , blue , green);
+		LED_ON(red , blue , green);
+		HAL_Delay(200);
+		LED_OFF();
 
 		/*
 		TIM3->RED = 0;
@@ -149,6 +153,14 @@ static void LED_ON (int _red, int _blue, int _green){
 	TIM3->RED = _red;
 	TIM3->BLUE = _blue;
 	TIM2->GREEN = _green;
+
+}
+
+static void LED_OFF (void) {
+
+	TIM3->RED = 257;
+	TIM3->BLUE = 257;
+	TIM2->GREEN = 257;
 
 }
 
