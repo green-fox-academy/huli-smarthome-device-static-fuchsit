@@ -113,18 +113,19 @@ int main(void) {
 
 	Peripherals_Init();
 
-	char led_color[] = "FF80FF";
-
-
-
-	int red = 0x00;
-	int blue = 0xFF;
+	int red = 0x80;
+	int blue = 0x80;
 	int green = 0x80;
 
 	while(1){
-		//printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
+		printf("TIM3R: %d    TIM3B: %d   TIM2G: %d \n\n" , TIM3->CNT , TIM3->CNT , TIM2->CNT);
+		HAL_Delay(500);
+
+		BSP_LED_Toggle(LED_GREEN);
+		HAL_Delay(500);
 
 			LED_ON(red , blue , green);
+
 		/*
 		TIM3->RED = 0;
 		TIM3->BLUE = 0;

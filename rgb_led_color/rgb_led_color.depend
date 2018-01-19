@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1516369287 source:c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\rgb_led_color\main.c
+	<stdio.h>
+	<stdlib.h>
+
