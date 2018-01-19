@@ -74,14 +74,15 @@ uint32_t socketId = 0;
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
 typedef enum ExampleKind {
-	EXAMPLE_SIMPLE_MQTT, EXAMPLE_MQTT, EXAMPLE_HTTPS_REST,
+	EXAMPLE_SIMPLE_MQTT, /*EXAMPLE_MQTT*/ EXAMPLE_HTTPS_REST,
 } ExampleKind;
 
 typedef enum State_Of_Operation {
 	STATE_SSDP_DISCOVERY, 	// waiting for the correct ssdp discovery packet to arrive
 	STATE_HTTP_SERVER,		// on receiving GET /getDeviceParams returns device params, on POST updates device config
 	CONNECT_GGL_CORE,		// connects and subscribes to ggl iot core
-	STATE_MQTT				// listens to commands from the subscribed iot core topics
+	STATE_MQTT,				// listens to commands from the subscribed iot core topics
+	EXAMPLE_MQTT
 } State_Of_Operation;
 
 typedef struct device_config{
@@ -153,7 +154,7 @@ int main(void) {
 
 	conf_t conf;
 	device_config_t device;
-	device.state_of_device = STATE_SSDP_DISCOVERY;
+	device.state_of_device = EXAMPLE_MQTT;
 
 	/*printf("hello\n");
 	parse_JSON(&conf, JSON_STRING);
@@ -174,12 +175,16 @@ int main(void) {
 			HAL_Delay(500);
 			device.state_of_device = STATE_MQTT;
 			break;
-		case STATE_MQTT:
+		case EXAMPLE_MQTT:
 			printf("entered MQTT state\n");
 			HAL_Delay(500);
-			device.state_of_device = STATE_SSDP_DISCOVERY;
+			//SimpleMQTT_Example();
+			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+			while (1) {
+
+			}
+//			device.state_of_device = STATE_SSDP_DISCOVERY;
 //			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
-			SimpleMQTT_Example();
 			break;
 		}
 	}
@@ -290,7 +295,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 }
 
 static void SimpleMQTT_Example() {
-	int rc = MqttClient_NetConnect(&mqttClient, "m2m.eclipse.org", 1883, 2000,
+	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
 			0, NULL);
 	if (rc != MQTT_CODE_SUCCESS) {
 		printf("ERROR MqttClient_NetConnect rc=%d\r\n", rc);
@@ -312,8 +317,12 @@ static void SimpleMQTT_Example() {
 	printf("after mqqt client connect\n");
 	MqttPublish pub;
 	XMEMSET(&pub, 0, sizeof(MqttPublish));
-	pub.buffer = (byte*)"{ \"key\": \"value\" }";
-	pub.buffer_len = strlen((char*)pub.buffer);
+
+	char *msg = "test message";
+	word32 msgLen = strlen(msg);
+
+	pub.buffer = (byte*)msg;
+	pub.total_len = msgLen;
 	pub.topic_name = "ptopic";
 	pub.qos = MQTT_QOS_0;
 
@@ -422,7 +431,7 @@ static void SW_STACK_Init() {
 
 	// initialize google stack
 	GGL_DeviceDef device;
-	device.deviceId = "test-iot-device-3";
+	device.deviceId = "test-iot-device-2";
 	device.deviceRegistry = "greenfox-device-registry";
 	device.projectId = "static-aventurin-fuchsit";
 	device.region = "europe-west1";
