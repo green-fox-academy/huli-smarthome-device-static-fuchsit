@@ -13,7 +13,14 @@
 #define GGL_MSG(fmt, ...)			SHOME_LogMsg("ggl", fmt, ##__VA_ARGS__)
 #define GGL_EXIT(fnc, rc, fail)		SHOME_LogExit("ggl", fnc, rc, fail)
 
+static const char SA_JWT_HEADER[] = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}";
+static const char SA_JWT_BODY_TEMPLATE[] =
+        "{\"iss\":\"%s\",\"scope\":\"%s\",\"aud\":\"https://www.googleapis.com/oauth2/v4/token\",\"exp\":%lu,\"iat\":%lu}";
+
 static GGL_InitDef *GGL_Config;
+
+static uint32_t GGL_tokenValidUntil = 0;
+static char* GGL_accessToken = NULL;
 
 extern MqttClient mqttClient;
 
@@ -26,6 +33,17 @@ void GGL_IOT_Init(GGL_InitDef *config) {
 	GGL_ENTER("GGL_IOT_Init");
 	GGL_Config = config;
 	GGL_EXIT("GGL_IOT_Init", 0, 0);
+}
+
+int GGL_IOT_GetAccessToken() {
+    GGL_ENTER("GGL_MQTT_Connect");
+
+    char headerB64[128];
+
+    char jwtBuffer[1024];
+
+
+    GGL_EXIT("GGL_MQTT_Connect", 0, 0);
 }
 
 int GGL_MQTT_WaitForMessage(uint32_t timeout) {
@@ -164,7 +182,6 @@ int GGL_MQTT_Ping() {
 	return MqttClient_Ping(&mqttClient);
 }
 
-
 int GGL_RS256_Sign(const char *dataBuff, char *signature, word32 signatureSize) {
 	GGL_ENTER("GGL_RS256_Sign");
 	uint8_t sigType = WC_SIGNATURE_TYPE_RSA_W_ENC;
@@ -232,13 +249,12 @@ int GGL_RS256_Sign(const char *dataBuff, char *signature, word32 signatureSize) 
 
 int GGL_JWT_Create(char *buffer, word32 bufferLen) {
 	GGL_ENTER("GGL_JWT_Create");
-	const char *head = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}";
-	const word32 headSize = strlen(head);
+	const word32 headSize = strlen(SA_JWT_HEADER);
 	int rc;
 
 	char* buffPos = &buffer[0];
 	word32 buffSizeIo = bufferLen;
-	if ((rc = Base64_Encode_NoNl((byte*) head, headSize, (byte*) buffPos,
+	if ((rc = Base64_Encode_NoNl((byte*) SA_JWT_HEADER, headSize, (byte*) buffPos,
 			&buffSizeIo)) != 0) {
 		GGL_MSG("ERROR: Base64_Encode_NoNl header %d\r\n", rc);
 		GGL_EXIT("GGL_JWT_Create", rc, 1);

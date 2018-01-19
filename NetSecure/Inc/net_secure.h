@@ -7,6 +7,8 @@
 #include "stm32f7xx_hal.h"
 #endif
 
+#include "net_transport.h"
+
 typedef struct __NetSecure_InitTypeDef {
 	uint8_t debugEnable;
 	RNG_HandleTypeDef *rngHandle;

@@ -13,6 +13,12 @@
 typedef struct __GGL_NetworkDef {
 	char* mqttHost;
 	uint16_t mqttPort;
+	char* restApiBasePath;
+	char* oAuthApiBasePath;
+	char* saClientEmail;
+	char* saScope;
+	char* saPrivateKey;
+	uint16_t saPrivateKeySize;
 	NetConnectionContext mqttConnectionContext;
 } GGL_NetworkDef;
 
@@ -37,6 +43,15 @@ typedef struct __GGL_InitDef {
 } GGL_InitDef;
 
 /**
+ * @brief		Holds the access token contents
+ */
+typedef struct __GGL_AccessTokenDef {
+	char* accessToken;
+	char* tokenType;
+	uint16_t expiresIn;
+} GGL_AccessTokenDef;
+
+/**
  *  @brief      Initializes the Google IOT library
  *  @discussion Similarly to the hardware peripherals, this method should be
  *  			invoked with all the init data specified in the structure before
@@ -44,6 +59,8 @@ typedef struct __GGL_InitDef {
  *  @param      config     the connection and device configuration
  */
 void GGL_IOT_Init(GGL_InitDef *config);
+
+void GGL_IOT_ListDevices();
 
 /**
  *  @brief      Connects and authenticates the device to the google MQTT broker on TLS

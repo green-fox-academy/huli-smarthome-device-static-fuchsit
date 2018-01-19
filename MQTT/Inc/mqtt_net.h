@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "net_settings.h"
 #include "wolfmqtt/mqtt_client.h"
+#include "net_transport.h"
 
 #define MQTT_MAX_BUFFER_SIZE         	512
 #define MQTT_DEFAULT_TIMEOUT			5000
