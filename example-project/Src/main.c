@@ -34,7 +34,7 @@ m * @file    Templates/Src/main.c
  */
 
 /*
- * TODO
+ * FUT
  * - add code to handle disconnection from internet or power grid
  *  by saving actual state when state is changed to device
  * 	EPROM memory
@@ -42,6 +42,16 @@ m * @file    Templates/Src/main.c
  *   initialization mode (add exponential backoff; see example at google policy
  *   and https://en.wikipedia.org/wiki/Exponential_backoff)
  */
+
+/*
+ * FUT
+ * implement a function which updates global error status
+ */
+
+ /*
+  * FUT
+  * add a device.h to make device info accessible where necessary
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -91,6 +101,127 @@ GGL_InitDef gglConfig;
 NetSecure_InitTypeDef secConfig;
 MQTT_NetInitTypeDef mqttConfig;
 
+/*****************************************
+ * FUT
+ * if given operation throws global error, which prevents normal operation
+ * than the restart_needed should be updated with TRUE
+ *
+ * a period elapsed callback interrupt should run with exp backoff times to check current error status
+ * (or device.state_of_operation)
+ * if there is a global error device should restart
+ */
+
+/*
+ * FUT
+ * add operation continuity control to GGL mode too
+ */
+
+#define FALSE	0
+#define TRUE	1
+
+volatile int restart_enabled = FALSE;
+volatile int restart_needed = FALSE;
+volatile uint32_t process_start;
+volatile uint32_t restart_timeout_deadlie;
+
+void set_restart_timeout(uint32_t timeout) {
+	restart_enabled = TRUE;
+	process_start = HAL_GetTick();
+	restart_timeout_deadlie = timeout;
+}
+
+int restart_due_to_timeout_needed() {
+
+	if (!restart_enabled)
+		return FALSE;
+
+	if (HAL_GetTick() - restart_timeout_deadlie > process_start)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+void stop_restart_timeout() {
+	restart_enabled = FALSE;
+}
+
+/* restart handler TIM handle declaration */
+TIM_HandleTypeDef Tim3Handle;
+
+/**
+  * @brief TIM MSP Initialization
+  *        This function configures the hardware resources used in this example:
+  *           - Peripheral's clock enable
+  *           - Peripheral's GPIO Configuration
+  * @param htim: TIM handle pointer
+  * @retval None
+  */
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+{
+	Tim3Handle.Instance = TIM3;
+
+	 /* Initialize TIMx peripheral as follows:
+	      + Period = 10000 - 1
+	      + Prescaler = (SystemCoreClock/10000) - 1
+	      + ClockDivision = 0
+	      + Counter direction = Up
+	 */
+	Tim3Handle.Init.Period            = 10000 - 1;
+	Tim3Handle.Init.Prescaler         = 0; // FUT to be calculated
+	Tim3Handle.Init.ClockDivision     = 0;
+	Tim3Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;
+	Tim3Handle.Init.RepetitionCounter = 0;
+
+	 if (HAL_TIM_Base_Init(&Tim3Handle) != HAL_OK)
+	 {
+	   /* Initialization Error */
+	   //Error_Handler();
+	 }
+
+	 /*##-2- Start the TIM Base generation in interrupt mode ####################*/
+	 /* Start Channel1 */
+	// FUT null the timer register
+	 if (HAL_TIM_Base_Start_IT(&Tim3Handle) != HAL_OK)
+	 {
+	   /* Starting Error */
+	   //Error_Handler();
+	 }
+
+  /*##-1- Enable peripherals and GPIO Clocks #################################*/
+  /* TIMx Peripheral clock enable */
+ __HAL_RCC_TIM3_CLK_ENABLE();
+
+  /*##-2- Configure the NVIC for TIMx ########################################*/
+  /* Set the TIMx priority */
+  HAL_NVIC_SetPriority(TIM3_IRQn, 3, 0);
+
+  /* Enable the TIMx global Interrupt */
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+}
+
+void TIM3_IRQHandler(void)
+{
+  HAL_TIM_IRQHandler(&Tim3Handle);
+}
+
+void save_config() {
+	//save configuration to EPROM
+}
+void restart_device() {
+	//restarts board
+}
+void restart_procedure() {
+	save_config();
+	restart_device();
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if (restart_due_to_timeout_needed())
+		restart_procedure();
+}
+/* **************************************** */
+
+
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
 
@@ -139,15 +270,35 @@ static void SimpleMQTT_Example();
  */
 int main(void)
 {
+
 	Peripherals_Init();
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
 
-	//conf_t conf; // struct for testing JSON parser
 	device_config_t device;
+
+	/*
+	 * set initial device state
+	 */
 	device.state_of_device = STATE_SSDP_DISCOVERY;
+
+	/*
+	 * FUT
+	 * check if device config was saved, and proceed accordingly
+
+	int check_saved_device_info() {
+		if (device info saved in memory not NULL) {
+			load_device_info() {
+				device = saved instance of device;
+				device.ip = actual IP // incase if ip changed
+			}
+		} else {
+			device.state_of_operation = STATE_SSDP_DISCOVERY;
+		}
+	}
+	*/
 
 	/* to test JSMN parser*/
 	parse_JSON(&device, JSON_STRING);
@@ -193,6 +344,11 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
 		return 0;
 	}
+
+	/*
+	 * FUT
+	 * send response depending on incoming request (post/get + command)
+	 */
 	char snd[] =
 			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
 	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
@@ -212,7 +368,9 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 
 void HTTPSServerStart() {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback_HTTPS);
+	set_restart_timeout(30000);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
+	stop_restart_timeout();
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -234,6 +392,9 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 		printf("i found fuchsit keyword\n");
 	}
 
+	// FUT
+	// if proper keyword found, send dev info
+	// else send something stupid
 	char snd[] =
 			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"teszt_sspd_response\"}";
 	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
@@ -254,7 +415,12 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 
 void HTTP_SSDP_ServerStart() {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
+	/* FUT
+	 * save RTC or HAL_GetTcik();
+	 */
+	set_restart_timeout(20000);
 	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
+	stop_restart_timeout();
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -416,13 +582,9 @@ static void SW_STACK_Init() {
 	netContext.connection.id = 0;
 	net_Init(&netContext);
 
-	printf("before net secure init\n");
-
 	secConfig.rngHandle = &rngHandle;
 	secConfig.debugEnable = 1;
 	net_SecureInit(&secConfig);
-
-	printf("before mqtt init\n");
 
 	mqttConfig.callback = MQTT_HandleMessageCallback;
 	mqttConfig.ctx.id = 0;
@@ -445,7 +607,6 @@ static void SW_STACK_Init() {
 	GGL_IOT_Init(&gglConfig);
 
 	NTPClient_Init("hu.pool.ntp.org", 123);
-	printf("was here\n");
 }
 
 static void Peripherals_Init(void) {

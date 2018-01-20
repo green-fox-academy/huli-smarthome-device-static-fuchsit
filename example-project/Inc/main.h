@@ -54,7 +54,15 @@ typedef enum State_Of_Operation {
 	STATE_HTTPS_SERVER,   // on receiving GET /getDeviceParams returns device params, on POST updates device config
 	STATE_GGL_CORE,     // connects and subscribes to ggl iot core in MQTT SSL mode
 	STATE_MQTT,           // listens to commands from the subscribed iot core topics in test mode
+	STATE_ERROR         // in case ther is an error
 } State_Of_Operation;
+
+typedef enum Device_Type {
+	DEVICE_COFFEE_MAKER,
+	DEVICE_SMART_LIGTH,
+	DEVICE_LED_CONTROLLER,
+	DEVICE_WEATHRE_STATION
+} Device_Type;
 
 /*
  * This struct will carry all configuration information for the given IoT device
@@ -64,6 +72,7 @@ typedef struct device_config{
     char *device_id;
     char *device_ip;
     int device_port[12];
+    Device_Type device_type;
     State_Of_Operation state_of_device;
 } device_config_t;
 
