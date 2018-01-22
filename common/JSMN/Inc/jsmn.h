@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include <string.h>
 #include <math.h>
 #include "main.h"
+#include "device_info.h"
 
 #ifdef __cplusplus
 extern "C" {

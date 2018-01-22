@@ -43,11 +43,6 @@ m * @file    Templates/Src/main.c
  *   and https://en.wikipedia.org/wiki/Exponential_backoff)
  */
 
-/*
- * FUT
- * implement a function which updates global error status
- */
-
  /*
   * FUT
   * add a device.h to make device info accessible where necessary
@@ -65,6 +60,7 @@ m * @file    Templates/Src/main.c
 #include "ntp_client.h"
 #include "rtc_utils.h"
 #include "jsmn.h"
+#include "device_info.h"
 
 #define NEED_WIFI		1
 
@@ -88,7 +84,6 @@ uint32_t socketId = 0;
 
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
-
 /* Private define ------------------------------------------------------------*/
 #define SSID     "A66 Guest"
 #define PASSWORD "Hello123"
@@ -100,126 +95,8 @@ RNG_HandleTypeDef rngHandle;
 GGL_InitDef gglConfig;
 NetSecure_InitTypeDef secConfig;
 MQTT_NetInitTypeDef mqttConfig;
-
-/*****************************************
- * FUT
- * if given operation throws global error, which prevents normal operation
- * than the restart_needed should be updated with TRUE
- *
- * a period elapsed callback interrupt should run with exp backoff times to check current error status
- * (or device.state_of_operation)
- * if there is a global error device should restart
- */
-
-/*
- * FUT
- * add operation continuity control to GGL mode too
- */
-
-#define FALSE	0
-#define TRUE	1
-
-volatile int restart_enabled = FALSE;
-volatile int restart_needed = FALSE;
-volatile uint32_t process_start;
-volatile uint32_t restart_timeout_deadlie;
-
-void set_restart_timeout(uint32_t timeout) {
-	restart_enabled = TRUE;
-	process_start = HAL_GetTick();
-	restart_timeout_deadlie = timeout;
-}
-
-int restart_due_to_timeout_needed() {
-
-	if (!restart_enabled)
-		return FALSE;
-
-	if (HAL_GetTick() - restart_timeout_deadlie > process_start)
-		return TRUE;
-	else
-		return FALSE;
-}
-
-void stop_restart_timeout() {
-	restart_enabled = FALSE;
-}
-
-/* restart handler TIM handle declaration */
-TIM_HandleTypeDef Tim3Handle;
-
-/**
-  * @brief TIM MSP Initialization
-  *        This function configures the hardware resources used in this example:
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration
-  * @param htim: TIM handle pointer
-  * @retval None
-  */
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
-{
-	Tim3Handle.Instance = TIM3;
-
-	 /* Initialize TIMx peripheral as follows:
-	      + Period = 10000 - 1
-	      + Prescaler = (SystemCoreClock/10000) - 1
-	      + ClockDivision = 0
-	      + Counter direction = Up
-	 */
-	Tim3Handle.Init.Period            = 10000 - 1;
-	Tim3Handle.Init.Prescaler         = 0; // FUT to be calculated
-	Tim3Handle.Init.ClockDivision     = 0;
-	Tim3Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;
-	Tim3Handle.Init.RepetitionCounter = 0;
-
-	 if (HAL_TIM_Base_Init(&Tim3Handle) != HAL_OK)
-	 {
-	   /* Initialization Error */
-	   //Error_Handler();
-	 }
-
-	 /*##-2- Start the TIM Base generation in interrupt mode ####################*/
-	 /* Start Channel1 */
-	// FUT null the timer register
-	 if (HAL_TIM_Base_Start_IT(&Tim3Handle) != HAL_OK)
-	 {
-	   /* Starting Error */
-	   //Error_Handler();
-	 }
-
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
- __HAL_RCC_TIM3_CLK_ENABLE();
-
-  /*##-2- Configure the NVIC for TIMx ########################################*/
-  /* Set the TIMx priority */
-  HAL_NVIC_SetPriority(TIM3_IRQn, 3, 0);
-
-  /* Enable the TIMx global Interrupt */
-  HAL_NVIC_EnableIRQ(TIM3_IRQn);
-}
-
-void TIM3_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&Tim3Handle);
-}
-
-void save_config() {
-	//save configuration to EPROM
-}
-void restart_device() {
-	//restarts board
-}
-void restart_procedure() {
-	save_config();
-	restart_device();
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (restart_due_to_timeout_needed())
-		restart_procedure();
-}
-/* **************************************** */
+extern device_config_t device;
+extern TIM_HandleTypeDef TIM4Handle;
 
 
 uint8_t MAC_Addr[6];
@@ -229,8 +106,8 @@ uint8_t IP_Addr[4];
  * added to test JSON parser
  */
 static const char *JSON_STRING =
-									"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
-									"}";
+			"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
+			"}";
 
 extern MqttClient mqttClient;
 
@@ -251,17 +128,17 @@ static void WIFI_GoOnline(void);
 /*
  * functions for SSDP discovery mode
  */
-void HTTP_SSDP_ServerStart();
+void HTTP_SSDP_ServerStart(device_config_t *device);
 int HandleClientCallback_SSDP(NetTransportContext *ctx);
 /*
  * functions for HTTPS mode
  */
-void HTTPSServerStart();
+void HTTPS_ServerStart(device_config_t *device);
 int HandleClientCallback_HTTPS(NetTransportContext *ctx);
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
-static void Wolfmqtt_PublishReceive(const char *host, int port);
-static void SimpleMQTT_Example();
+static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
+static void SimpleMQTT_Example(device_config_t *device);
 
 /**
  * @brief  Main program
@@ -270,14 +147,11 @@ static void SimpleMQTT_Example();
  */
 int main(void)
 {
-
 	Peripherals_Init();
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
-
-	device_config_t device;
 
 	/*
 	 * set initial device state
@@ -309,21 +183,21 @@ int main(void)
 		switch (device.state_of_device) {
 		case STATE_SSDP_DISCOVERY:
 			printf("entered SSDP state\n");
-			HTTP_SSDP_ServerStart();
+			HTTP_SSDP_ServerStart(&device);
 			device.state_of_device = STATE_HTTPS_SERVER;
 			break;
 		case STATE_HTTPS_SERVER:
 			printf("entered HTTPS state\n");
-			HTTPSServerStart();
+			HTTPS_ServerStart(&device);
 			device.state_of_device = STATE_MQTT;
 			break;
 		case STATE_MQTT:
 			printf("entered simple MQTT state\n");
-			SimpleMQTT_Example();
+			SimpleMQTT_Example(&device);
 			break;
 		case STATE_GGL_CORE:
 			printf("entered GGL MQTT state\n");
-			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883, &device);
 			break;
 		}
 	}
@@ -339,6 +213,16 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	char buff[512];
 
+	char in_head[512];
+	char in_body[512];
+	int state_success = 0;
+
+	char snd[] =
+		"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
+
+	if (strlen(buff) > 0)
+		state_success = evaluate_http(&device, buff, in_head, in_body, snd);
+
 	int rc = net_TLSReceive(ctx, buff, 512, 2000);
 	if (rc < 0) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
@@ -349,24 +233,19 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	 * FUT
 	 * send response depending on incoming request (post/get + command)
 	 */
-	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
-	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
+		if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
 
-	/*
-	 * if "getDeviceParams" is found in the incoming buffer, state is promted to next state
-	 */
-	if (strstr(buff, "getDeviceParams")) {
+	if (state_success) {
 		return HTTPS_SUCCESS;
 	} else {
 		return 0;
 	}
 }
 
-void HTTPSServerStart() {
+void HTTPS_ServerStart(device_config_t *device) {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback_HTTPS);
 	set_restart_timeout(30000);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
@@ -379,6 +258,9 @@ void HTTPSServerStart() {
 
 int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 	char buff[512];
+	char in_head[512];
+	char in_body[512];
+	int state_success = 0;
 
 	int rc = net_Receive(ctx, buff, 512, 2000);
 	if (rc < 0) {
@@ -386,26 +268,27 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 		return 0;
 	}
 
-	/* printing the whole received buffer for test purposes*/
-	printf("buff: %s\n", buff);
-	if (strstr(buff, "fuchsit")) {
-		printf("i found fuchsit keyword\n");
+	printf("incoming buffer: %s\n", buff);
+
+	char snd[] =
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
+
+
+	if (strlen(buff) > 0) {
+		state_success = evaluate_http(&device, buff, in_head, in_body, snd);
 	}
+
+	printf("send: %s\n", snd);
 
 	// FUT
 	// if proper keyword found, send dev info
 	// else send something stupid
-	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"teszt_sspd_response\"}";
 	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
 
-	/*
-	 * if "fuchsit" is found in the incoming buffer, state is promted to next state
-	 */
-	if (strstr(buff, "fuchsit")) {
+	if (state_success) {
 		return SSPD_DISCOVERY_SUCCESS;
 	} else {
 		return 0;
@@ -413,11 +296,8 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 }
 
 
-void HTTP_SSDP_ServerStart() {
+void HTTP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
-	/* FUT
-	 * save RTC or HAL_GetTcik();
-	 */
 	set_restart_timeout(20000);
 	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
 	stop_restart_timeout();
@@ -427,7 +307,7 @@ void HTTP_SSDP_ServerStart() {
 	}
 }
 
-static void Wolfmqtt_PublishReceive(const char *host, int port) {
+static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device) {
 	int rc;
 	if ((rc = GGL_MQTT_Connect()) != RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Connect FAILED %d - %s\r\n", rc,
@@ -459,7 +339,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 	GGL_MQTT_Disconnect();
 }
 
-static void SimpleMQTT_Example() {
+static void SimpleMQTT_Example(device_config_t *device) {
 	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
 			0, NULL);
 	if (rc != MQTT_CODE_SUCCESS) {
@@ -630,6 +510,11 @@ static void Peripherals_Init(void) {
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 	BSP_LED_Init(LED_GREEN);
+
+	/*
+	 * FUT
+	 */
+	//TIM4_Init(&TIM4Handle);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();

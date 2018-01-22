@@ -21,6 +21,7 @@ THE SOFTWARE.
  */
 
 #include "jsmn.h"
+#include "device_info.h"
 
 /**
  * Allocates a fresh unused token from the token pull.
