@@ -30,22 +30,28 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
     printf("first: %d\n", first);
     printf("last: %d\n", last);
 
-    size_t first_pos =  first - &in_buffer[0];
-    size_t last_pos =  last - &in_buffer[0];
+    if (first != last) { // there is a JSON body
+		size_t first_pos =  first - &in_buffer[0];
+		size_t last_pos =  last - &in_buffer[0];
 
-    printf("first_pos: %d\n", first_pos);
-    printf("last_pos: %d\n", last_pos);
+		printf("first_pos: %d\n", first_pos);
+		printf("last_pos: %d\n", last_pos);
 
-    strncpy(in_head, in_buffer, first_pos);
-    printf("in sprt head and body 1\n");
-    in_head[first_pos] = '\0';
+		if (first_pos != 0) { // if there is only JSON body - ie in GGL state
+			strncpy(in_head, in_buffer, first_pos);
+			printf("in sprt head and body 1\n");
+			in_head[first_pos] = '\0';
 
-    printf("in sprt head and body 2\n");
+			printf("in sprt head and body 2\n");
+		}
 
-    strncpy(in_body, first, last_pos - first_pos + 1);
-    in_body[last_pos - first_pos + 1] = '\0';
+		strncpy(in_body, first, last_pos - first_pos + 1);
+		in_body[last_pos - first_pos + 1] = '\0';
 
-    printf("in sprt head and body 3\n");
+		printf("in sprt head and body 3\n");
+    } else {			// there is NO JSON body - ie in SSDP state
+    	strcpy(in_head, in_buffer);
+    }
 
     return 0;
 }
@@ -81,7 +87,6 @@ int evaluate_http(device_config_t *device, char in_buffer[], char in_head[], cha
     int state_success = 0;
 
     separate_http_head_body(in_buffer, in_head, in_body);
-
 
     printf("in evaluate http\n");
 

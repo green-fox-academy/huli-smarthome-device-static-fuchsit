@@ -257,7 +257,7 @@ void HTTPS_ServerStart(device_config_t *device) {
 }
 
 int HandleClientCallback_SSDP(NetTransportContext *ctx) {
-	char buff[512];
+	char buff[512] = "\0";
 	char in_head[512];
 	char in_body[512];
 	int state_success = 0;
@@ -298,7 +298,7 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 
 void HTTP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
-	set_restart_timeout(20000);
+	set_restart_timeout(5000);
 	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
 	stop_restart_timeout();
 	if (rc != 0) {
@@ -514,7 +514,7 @@ static void Peripherals_Init(void) {
 	/*
 	 * FUT
 	 */
-	//TIM4_Init(&TIM4Handle);
+	TIM4_Init(&TIM4Handle);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();

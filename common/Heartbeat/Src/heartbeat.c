@@ -55,6 +55,11 @@ TIM_HandleTypeDef TIM4Handle;
   */
 void TIM4_Init(TIM_HandleTypeDef *htim)
 {
+
+	  /*##-1- Enable peripherals and GPIO Clocks #################################*/
+	  /* TIMx Peripheral clock enable */
+	 __HAL_RCC_TIM4_CLK_ENABLE();
+
 	TIM4Handle.Instance = TIM4;
 
 	 /* Initialize TIMx peripheral as follows:
@@ -84,9 +89,6 @@ void TIM4_Init(TIM_HandleTypeDef *htim)
 	   //Error_Handler();
 	 }
 
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
- __HAL_RCC_TIM4_CLK_ENABLE();
 
   /*##-2- Configure the NVIC for TIMx ########################################*/
   /* Set the TIMx priority */
@@ -110,12 +112,13 @@ void restart_device() {
 void restart_procedure() {
 	save_config();
 	restart_device();
+	//printf("restart procedure called\n");
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (restart_due_to_timeout_needed())
 		restart_procedure();
 
-	printf("callback called\n");
+	//printf("callback called\n");
 }
 /* **************************************** */
