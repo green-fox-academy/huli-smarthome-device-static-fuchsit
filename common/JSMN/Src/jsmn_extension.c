@@ -28,14 +28,14 @@ char *strndup(const char *s1, size_t n)
 };
 
 /*
- * pares up a JSON string, which has a known structure and the token num can be determined
+ * parse up a JSON string, which has a known structure and the token num can be determined
  */
 
 int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 	int i;
 	int r;
 	jsmn_parser p;
-	jsmntok_t t[128]; /* We expect no more than 128 tokens */
+	jsmntok_t t[10]; /* We expect no more than 10 tokens */
 
 	jsmn_init(&p);
 	r = jsmn_parse(&p, JSON_STRING, strlen(JSON_STRING), t, sizeof(t)/sizeof(t[0]));
@@ -52,24 +52,23 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 
 	/* Loop over all keys of the root object */
 	for (i = 1; i < r; i++) {
-		if (jsoneq(JSON_STRING, &t[i], "device") == 0) {
+		if (jsoneq(JSON_STRING, &t[i], "Color") == 0) {
 			/* We may use strndup() to fetch string value */
-			printf("- device: %.*s\n", t[i+1].end-t[i+1].start,
+			printf("- Color: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
-            conf_struct->device_name = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
-
+            conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "id") == 0) {
-			/* We may additionally check if the value is either "true" or "false" */
+/*		} else if (jsoneq(JSON_STRING, &t[i], "id") == 0) {
+			 We may additionally check if the value is either "true" or "false"
 			printf("- id: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			i++;
 		} else if (jsoneq(JSON_STRING, &t[i], "ip") == 0) {
-			/* We may want to do strtol() here to get numeric value */
+			 We may want to do strtol() here to get numeric value
 			printf("- ip: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			i++;
-		}
+		}*/
 //            else if (jsoneq(JSON_STRING, &t[i], "groups") == 0) {
 //			int j;
 //			printf("- Groups:\n");
@@ -81,8 +80,7 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 //				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
 //			}
 //			i += t[i+1].size + 1;
-//		}
-		else {
+		} else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					JSON_STRING + t[i].start);
 		}

@@ -107,9 +107,9 @@ uint8_t IP_Addr[4];
 /*
  * added to test JSON parser
  */
-static const char *JSON_STRING =
+/*static const char *JSON_STRING =
 			"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
-			"}";
+			"}";*/
 
 extern MqttClient mqttClient;
 
@@ -158,7 +158,7 @@ int main(void)
 	/*
 	 * set initial device state
 	 */
-	device.state_of_device = STATE_SSDP_DISCOVERY;
+	device.state_of_device = STATE_GGL_CORE;
 
 	/*
 	 * FUT
@@ -177,8 +177,8 @@ int main(void)
 	*/
 
 	/* to test JSMN parser*/
-	parse_JSON(&device, JSON_STRING);
-	printf("conf dev: %s\n", device.device_name);
+	//parse_JSON(&device, JSON_STRING);
+	//printf("conf dev: %s\n", device.device_name);
 
 	while (1) {
 
@@ -212,6 +212,8 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 
 	// FUT execute_command(*device, in_jsonn == message, out_json);
 
+	parse_JSON(&device, message);
+	printf("%s\n", device.color);
 	/* FUT report status back
 	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
 			!= RC_SUCCESS) {
