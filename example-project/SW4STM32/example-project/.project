@@ -346,6 +346,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn.c</locationURI>
 		</link>
 		<link>
+			<name>Example/User/jsmn_extension.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn_extension.c</locationURI>
+		</link>
+		<link>
 			<name>Example/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>

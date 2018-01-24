@@ -92,7 +92,7 @@ int evaluate_http(device_config_t *device, char in_buffer[], char in_head[], cha
 
     switch (device->state_of_device) {
         case STATE_SSDP_DISCOVERY:
-            if (strstr(in_body, "fuchsit")) {
+            if (strstr(in_head, "fuchsit")) {
             	printf("in evaluate http fuchsit answer\n");
                 prepare_http_response(device, SSDP_FUCHSIT_ANSWER, snd);
                 state_success = 1;
@@ -106,6 +106,7 @@ int evaluate_http(device_config_t *device, char in_buffer[], char in_head[], cha
             } else if (strstr(in_head, "setDeviceParams")){
                 int dev_pars_configed = set_device_params(device, in_body);
                 if (dev_pars_configed) {
+                	// connect to mqtt - válasz, h ok
                     prepare_http_response(device, HTTPS_SUCCESSFUL_DEVICE_CONFIG, snd);
                     state_success = 1;
                 }

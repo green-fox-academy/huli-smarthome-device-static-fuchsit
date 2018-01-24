@@ -5,6 +5,7 @@
 #include "device_info.h"
 
 #define HTTPS_SUCCESS -5
+#define SSPD_DISCOVERY_SUCCESS		-5
 
 typedef enum HTTP_Response_Eval {
 	SSDP_FUCHSIT_ANSWER,

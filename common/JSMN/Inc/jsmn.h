@@ -104,30 +104,6 @@ int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 		jsmntok_t *tokens, unsigned int num_tokens);
 
 /*
- * not standard JSMN library elements.
- * were created for the smart home project
- */
-
-/*
- * checks if the jsmn token's key value is equal to the searches key value
- * json: the original json string
- * tok: jsmn token
- * s: looked up key value
- */
-int jsoneq(const char *json, jsmntok_t *tok, const char *s);
-/*
- * returns a copy of a string (pointer) from the memory location of s1
- * up to n bytes long
- */
-char *strndup(const char *s1, size_t n);
-/*
- * paprses a JSON_STRING, and copies its value to the corresponding
- * members of the conf_struct.
- */
-int parse_JSON(device_config_t *conf_struct, char *JSON_STRING);
-
-
-/*
  ***************************************************************
  */
 

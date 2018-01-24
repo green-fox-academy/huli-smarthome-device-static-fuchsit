@@ -60,15 +60,17 @@ m * @file    Templates/Src/main.c
 #include "ntp_client.h"
 #include "rtc_utils.h"
 #include "jsmn.h"
+#include "jsmn_extension.h"
 #include "device_info.h"
+#include "heartbeat.h"
+#include "http_hanlder.h"
 
 #define NEED_WIFI		1
 
 #define NTP_MAX_RETRY_COUNT			10
 #define NTP_RETRY_INTERVAL_MS		10000
 
-#define SSPD_DISCOVERY_SUCCESS		-5
-#define HTTPS_SUCCESS				-6
+
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -128,7 +130,7 @@ static void WIFI_GoOnline(void);
 /*
  * functions for SSDP discovery mode
  */
-void HTTP_SSDP_ServerStart(device_config_t *device);
+void UDP_SSDP_ServerStart(device_config_t *device);
 int HandleClientCallback_SSDP(NetTransportContext *ctx);
 /*
  * functions for HTTPS mode
@@ -183,7 +185,7 @@ int main(void)
 		switch (device.state_of_device) {
 		case STATE_SSDP_DISCOVERY:
 			printf("entered SSDP state\n");
-			HTTP_SSDP_ServerStart(&device);
+			UDP_SSDP_ServerStart(&device);
 			device.state_of_device = STATE_HTTPS_SERVER;
 			break;
 		case STATE_HTTPS_SERVER:
@@ -207,6 +209,18 @@ int main(void)
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
+
+	// FUT execute_command(*device, in_jsonn == message, out_json);
+
+	/* FUT report status back
+	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+		return;
+	}
+	 */
+
 	return 0;
 }
 
@@ -296,7 +310,7 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 }
 
 
-void HTTP_SSDP_ServerStart(device_config_t *device) {
+void UDP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
 	set_restart_timeout(5000);
 	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
