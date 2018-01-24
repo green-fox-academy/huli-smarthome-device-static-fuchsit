@@ -346,6 +346,11 @@
 			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn.c</locationURI>
 		</link>
 		<link>
+			<name>Example/User/jsmn_extension.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn_extension.c</locationURI>
+		</link>
+		<link>
 			<name>Example/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>
@@ -359,6 +364,16 @@
 			<name>Libraries/GoogleIOT/google_iot.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/GoogleIOT/Src/google_iot.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/HTTP_Handler/http_handler.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/HTTP_Handler/Src/http_handler.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/Heartbeat/heartbeat.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/Heartbeat/Src/heartbeat.c</locationURI>
 		</link>
 		<link>
 			<name>Libraries/LOG/smarthome_log.c</name>

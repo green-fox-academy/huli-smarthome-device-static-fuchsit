@@ -34,7 +34,7 @@ m * @file    Templates/Src/main.c
  */
 
 /*
- * TODO
+ * FUT
  * - add code to handle disconnection from internet or power grid
  *  by saving actual state when state is changed to device
  * 	EPROM memory
@@ -42,6 +42,11 @@ m * @file    Templates/Src/main.c
  *   initialization mode (add exponential backoff; see example at google policy
  *   and https://en.wikipedia.org/wiki/Exponential_backoff)
  */
+
+ /*
+  * FUT
+  * add a device.h to make device info accessible where necessary
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -55,14 +60,17 @@ m * @file    Templates/Src/main.c
 #include "ntp_client.h"
 #include "rtc_utils.h"
 #include "jsmn.h"
+#include "jsmn_extension.h"
+#include "device_info.h"
+#include "heartbeat.h"
+#include "http_hanlder.h"
 
 #define NEED_WIFI		1
 
 #define NTP_MAX_RETRY_COUNT			10
 #define NTP_RETRY_INTERVAL_MS		10000
 
-#define SSPD_DISCOVERY_SUCCESS		-5
-#define HTTPS_SUCCESS				-6
+
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -78,7 +86,6 @@ uint32_t socketId = 0;
 
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
-
 /* Private define ------------------------------------------------------------*/
 #define SSID     "A66 Guest"
 #define PASSWORD "Hello123"
@@ -90,6 +97,9 @@ RNG_HandleTypeDef rngHandle;
 GGL_InitDef gglConfig;
 NetSecure_InitTypeDef secConfig;
 MQTT_NetInitTypeDef mqttConfig;
+extern device_config_t device;
+extern TIM_HandleTypeDef TIM4Handle;
+
 
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
@@ -98,8 +108,8 @@ uint8_t IP_Addr[4];
  * added to test JSON parser
  */
 static const char *JSON_STRING =
-									"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
-									"}";
+			"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
+			"}";
 
 extern MqttClient mqttClient;
 
@@ -120,17 +130,17 @@ static void WIFI_GoOnline(void);
 /*
  * functions for SSDP discovery mode
  */
-void HTTP_SSDP_ServerStart();
+void UDP_SSDP_ServerStart(device_config_t *device);
 int HandleClientCallback_SSDP(NetTransportContext *ctx);
 /*
  * functions for HTTPS mode
  */
-void HTTPSServerStart();
+void HTTPS_ServerStart(device_config_t *device);
 int HandleClientCallback_HTTPS(NetTransportContext *ctx);
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
-static void Wolfmqtt_PublishReceive(const char *host, int port);
-static void SimpleMQTT_Example();
+static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
+static void SimpleMQTT_Example(device_config_t *device);
 
 /**
  * @brief  Main program
@@ -145,9 +155,26 @@ int main(void)
 
 	WIFI_GoOnline();
 
-	//conf_t conf; // struct for testing JSON parser
-	device_config_t device;
+	/*
+	 * set initial device state
+	 */
 	device.state_of_device = STATE_SSDP_DISCOVERY;
+
+	/*
+	 * FUT
+	 * check if device config was saved, and proceed accordingly
+
+	int check_saved_device_info() {
+		if (device info saved in memory not NULL) {
+			load_device_info() {
+				device = saved instance of device;
+				device.ip = actual IP // incase if ip changed
+			}
+		} else {
+			device.state_of_operation = STATE_SSDP_DISCOVERY;
+		}
+	}
+	*/
 
 	/* to test JSMN parser*/
 	parse_JSON(&device, JSON_STRING);
@@ -158,21 +185,21 @@ int main(void)
 		switch (device.state_of_device) {
 		case STATE_SSDP_DISCOVERY:
 			printf("entered SSDP state\n");
-			HTTP_SSDP_ServerStart();
+			UDP_SSDP_ServerStart(&device);
 			device.state_of_device = STATE_HTTPS_SERVER;
 			break;
 		case STATE_HTTPS_SERVER:
 			printf("entered HTTPS state\n");
-			HTTPSServerStart();
+			HTTPS_ServerStart(&device);
 			device.state_of_device = STATE_MQTT;
 			break;
 		case STATE_MQTT:
 			printf("entered simple MQTT state\n");
-			SimpleMQTT_Example();
+			SimpleMQTT_Example(&device);
 			break;
 		case STATE_GGL_CORE:
 			printf("entered GGL MQTT state\n");
-			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883);
+			Wolfmqtt_PublishReceive("mqtt.googleapis.com", 8883, &device);
 			break;
 		}
 	}
@@ -182,37 +209,61 @@ int main(void)
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
+
+	// FUT execute_command(*device, in_jsonn == message, out_json);
+
+	/* FUT report status back
+	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+		return;
+	}
+	 */
+
 	return 0;
 }
 
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	char buff[512];
 
+	char in_head[512];
+	char in_body[512];
+	int state_success = 0;
+
+	char snd[] =
+		"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
+
+	if (strlen(buff) > 0)
+		state_success = evaluate_http(&device, buff, in_head, in_body, snd);
+
 	int rc = net_TLSReceive(ctx, buff, 512, 2000);
 	if (rc < 0) {
 		printf("ERROR: could not receive data: %d\r\n", rc);
 		return 0;
 	}
-	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
-	if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
+
+	/*
+	 * FUT
+	 * send response depending on incoming request (post/get + command)
+	 */
+		if ((rc = net_TLSSend(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
 
-	/*
-	 * if "getDeviceParams" is found in the incoming buffer, state is promted to next state
-	 */
-	if (strstr(buff, "getDeviceParams")) {
+	if (state_success) {
 		return HTTPS_SUCCESS;
 	} else {
 		return 0;
 	}
 }
 
-void HTTPSServerStart() {
+void HTTPS_ServerStart(device_config_t *device) {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback_HTTPS);
+	set_restart_timeout(30000);
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
+	stop_restart_timeout();
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -220,7 +271,10 @@ void HTTPSServerStart() {
 }
 
 int HandleClientCallback_SSDP(NetTransportContext *ctx) {
-	char buff[512];
+	char buff[512] = "\0";
+	char in_head[512];
+	char in_body[512];
+	int state_success = 0;
 
 	int rc = net_Receive(ctx, buff, 512, 2000);
 	if (rc < 0) {
@@ -228,23 +282,27 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 		return 0;
 	}
 
-	/* printing the whole received buffer for test purposes*/
-	printf("buff: %s\n", buff);
-	if (strstr(buff, "fuchsit")) {
-		printf("i found fuchsit keyword\n");
-	}
+	printf("incoming buffer: %s\n", buff);
 
 	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"teszt_sspd_response\"}";
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
+
+
+	if (strlen(buff) > 0) {
+		state_success = evaluate_http(&device, buff, in_head, in_body, snd);
+	}
+
+	printf("send: %s\n", snd);
+
+	// FUT
+	// if proper keyword found, send dev info
+	// else send something stupid
 	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
 	}
 
-	/*
-	 * if "fuchsit" is found in the incoming buffer, state is promted to next state
-	 */
-	if (strstr(buff, "fuchsit")) {
+	if (state_success) {
 		return SSPD_DISCOVERY_SUCCESS;
 	} else {
 		return 0;
@@ -252,16 +310,18 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 }
 
 
-void HTTP_SSDP_ServerStart() {
+void UDP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
+	set_restart_timeout(5000);
 	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
+	stop_restart_timeout();
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
 	}
 }
 
-static void Wolfmqtt_PublishReceive(const char *host, int port) {
+static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device) {
 	int rc;
 	if ((rc = GGL_MQTT_Connect()) != RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Connect FAILED %d - %s\r\n", rc,
@@ -293,7 +353,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port) {
 	GGL_MQTT_Disconnect();
 }
 
-static void SimpleMQTT_Example() {
+static void SimpleMQTT_Example(device_config_t *device) {
 	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
 			0, NULL);
 	if (rc != MQTT_CODE_SUCCESS) {
@@ -416,13 +476,9 @@ static void SW_STACK_Init() {
 	netContext.connection.id = 0;
 	net_Init(&netContext);
 
-	printf("before net secure init\n");
-
 	secConfig.rngHandle = &rngHandle;
 	secConfig.debugEnable = 1;
 	net_SecureInit(&secConfig);
-
-	printf("before mqtt init\n");
 
 	mqttConfig.callback = MQTT_HandleMessageCallback;
 	mqttConfig.ctx.id = 0;
@@ -445,7 +501,6 @@ static void SW_STACK_Init() {
 	GGL_IOT_Init(&gglConfig);
 
 	NTPClient_Init("hu.pool.ntp.org", 123);
-	printf("was here\n");
 }
 
 static void Peripherals_Init(void) {
@@ -469,6 +524,11 @@ static void Peripherals_Init(void) {
 
 	BSP_PB_Init(BUTTON_USER, BUTTON_MODE_EXTI);
 	BSP_LED_Init(LED_GREEN);
+
+	/*
+	 * FUT
+	 */
+	TIM4_Init(&TIM4Handle);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();
