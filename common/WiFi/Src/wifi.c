@@ -291,8 +291,6 @@ WIFI_Status_t WIFI_GetHostAddress( char* location, uint8_t* ipaddr)
 WIFI_Status_t WIFI_OpenClientConnection(uint32_t socket, WIFI_Protocol_t type, const char* name, uint8_t* ipaddr, uint16_t port, uint16_t local_port)
 {
 
-	printf("\nsocket: %d,\n conn type: %d,\n ipaddr: %d:%d:%d:%d,\n port: %d,\n, local port: %d\n\n", socket, type, ipaddr[0], ipaddr[1],
-			ipaddr[2],ipaddr[3], port, local_port);
   WIFI_Status_t ret = WIFI_STATUS_ERROR;
   ES_WIFI_Conn_t conn;
   
