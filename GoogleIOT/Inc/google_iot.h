@@ -6,6 +6,19 @@
 #include "net_transport.h"
 #include "smarthome_log.h"
 
+typedef struct GGL_Device {
+    char *id;
+    char *numId;
+    char *lastHeartbeatTime;
+    char *deviceNature;
+    char *publicKey;
+} GGL_Device;
+
+typedef struct GGL_DeviceList {
+    GGL_Device *deviceList;
+    uint16_t deviceCount;
+} GGL_DeviceList;
+
 /**
  *  @brief      This struct should contain all the network preferences which
  * 				is necessary to connect
@@ -19,6 +32,8 @@ typedef struct __GGL_NetworkDef {
 	char* saScope;
 	char* saPrivateKey;
 	uint16_t saPrivateKeySize;
+	char* mqttPrivateKey;
+	uint16_t mqttPrivateKeySize;
 	NetConnectionContext mqttConnectionContext;
 } GGL_NetworkDef;
 
@@ -60,7 +75,49 @@ typedef struct __GGL_AccessTokenDef {
  */
 void GGL_IOT_Init(GGL_InitDef *config);
 
-void GGL_IOT_ListDevices();
+/**
+ * @brief       Lists the devices of the configured device registry
+ * @discussion  The devices will be returned in the parameter, which is pointer to
+ *              a pointer. The contents of this is dynamically allocated, so after you
+ *              don't need the results anymore, you need to explicitly free that!
+ *
+ *              WARNING: it's important that the credentials won't be returned (publicKey),
+ *              it will be NULL in the result (lowering memory footprint).
+ *
+ * @param       A pointer to a GGL_DeviceListPointer in which the devices will be loaded
+ * @retval      result code, where the success is 0
+ */
+int GGL_IOT_ListDevices(GGL_DeviceList **deviceListPPtr);
+
+/**
+ * @brief       Deletes a device from the configured device registry
+ * @discussion  The Google IoT Core REST API expects the numeric ID of the device
+ *
+ * @param       deviceNumId the numeric ID of the device
+ * @retval      result code, where the success is 0
+ */
+int GGL_IOT_DeleteDevice(char *deviceNumId);
+
+/**
+ * @brief       Creates the specified device in the configured device registry
+ * @discussion  You should specify only the ID, the deviceKind and the publicKey of
+ *              the device, and this function will register the device into the cloud.
+ *
+ * @param       device      a pointer to the device to create
+ * @retval      result code, where the success is 0
+ */
+int GGL_IOT_CreateDevice(GGL_Device *device);
+
+/**
+ * @brief       Updates the configuration of the specified device to the specified
+ *              config
+ *
+ * @param       deviceId        the string ID of the device (not the numId)
+ * @param       deviceConfig    the configuration for the device
+ *
+ * @retval      result code, where the success is 0
+ */
+int GGL_IOT_UpdateDeviceConfig(char *deviceId, char *deviceConfig);
 
 /**
  *  @brief      Connects and authenticates the device to the google MQTT broker on TLS

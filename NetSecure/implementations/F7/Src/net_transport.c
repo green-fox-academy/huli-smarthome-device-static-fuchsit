@@ -1,3 +1,5 @@
+#include "wolfssl/ssl.h"
+#include "wolfssl/internal.h"
 #include "app_ethernet.h"
 #include "ethernetif.h"
 #include "user_settings.h"
@@ -23,10 +25,10 @@
 #define NET_MSG(fmt, ...)			SHOME_LogMsg("net", fmt, ##__VA_ARGS__)
 #define NET_EXIT(fnc, rc, fail)		SHOME_LogExit("net", fnc, rc, fail)
 
-typedef int (*NetReadWriteCb)(struct netconn *conn, char* buffer, const uint32_t bufferSz, uint16_t *processed, uint32_t timeoutMs);
+typedef int (*NetReadWriteCb)(NetTransportContext *ctx, char* buffer, const uint32_t bufferSz, uint16_t *processed, uint32_t timeoutMs);
 
-int net_InnerSendUnsafe(struct netconn *conn, char* buffer, const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs);
-int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer, const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs);
+int net_InnerSendUnsafe(NetTransportContext *netTransportContext, char* buffer, const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs);
+int net_InnerReceiveUnsafe(NetTransportContext *netTransportContext, char* buffer, const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs);
 
 struct netbuf *net_activeBuf = NULL;
 uint16_t net_activeBufPos = 0;
@@ -265,7 +267,7 @@ int net_Disconnect(NetTransportContext *ctx) {
     return RC_SUCCESS;
 }
 
-int net_ProcessRecoursively(struct netconn* conn, const char *buffer, uint32_t bufferSz, uint16_t *totalSent, NetReadWriteCb callback, uint32_t timeoutMs, uint32_t spentTime) {
+int net_ProcessRecoursively(NetTransportContext *ctx, const char *buffer, uint32_t bufferSz, uint16_t *totalSent, NetReadWriteCb callback, uint32_t timeoutMs, uint32_t spentTime) {
     NET_ENTER("net_ProcessRecoursively");
 
     if (spentTime > timeoutMs) {
@@ -280,21 +282,20 @@ int net_ProcessRecoursively(struct netconn* conn, const char *buffer, uint32_t b
     MAX_DATA_CHUNK_SIZE < remaining ? MAX_DATA_CHUNK_SIZE : remaining;
     uint16_t currentProcessed = 0;
     char *remBufferPtr = (char*) buffer + *totalSent;
-    int rc = callback(conn, remBufferPtr, toSend, &currentProcessed, timeoutMs);
+    int rc = callback(ctx, remBufferPtr, toSend, &currentProcessed, timeoutMs);
     if (rc != ERR_OK) {
         NET_EXIT("net_ProcessRecoursively", rc, 1);
         return rc;
     }
 
     spentTime += (HAL_GetTick() - iterationStart);
-
     *totalSent += currentProcessed;
     if (*totalSent == bufferSz) {
         NET_EXIT("net_ProcessRecoursively", RC_SUCCESS, 0);
         return RC_SUCCESS;
     }
 
-    rc = net_ProcessRecoursively(conn, buffer, bufferSz, totalSent, callback, timeoutMs, spentTime);
+    rc = net_ProcessRecoursively(ctx, buffer, bufferSz, totalSent, callback, timeoutMs, spentTime);
 
     if (rc != ERR_OK) {
         NET_EXIT("net_ProcessRecoursively", rc, 1);
@@ -307,7 +308,7 @@ int net_ProcessRecoursively(struct netconn* conn, const char *buffer, uint32_t b
 int net_Send(NetTransportContext *ctx, const char* buffer, const uint32_t bufferSz, uint32_t timeoutMs) {
     NET_ENTER("net_Send");
     uint16_t totalSent = 0;
-    int rc = net_ProcessRecoursively(ctx->connection.conn, buffer, bufferSz, &totalSent, net_InnerSendUnsafe, timeoutMs, 0);
+    int rc = net_ProcessRecoursively(ctx, buffer, bufferSz, &totalSent, net_InnerSendUnsafe, timeoutMs, 0);
     if (rc != RC_SUCCESS) {
         NET_MSG("the send was failed with rc=%d\r\n", rc);
         NET_EXIT("net_Send", RC_ERROR, 1);
@@ -319,8 +320,9 @@ int net_Send(NetTransportContext *ctx, const char* buffer, const uint32_t buffer
 
 int net_Receive(NetTransportContext *ctx, const char* buffer, const uint32_t bufferSz, uint32_t timeoutMs) {
     NET_ENTER("net_Receive");
+    NET_MSG("Request arrived to receive %lu byte of data\r\n", bufferSz);
     uint16_t totalReceived = 0;
-    int rc = net_ProcessRecoursively(ctx->connection.conn, buffer, bufferSz, &totalReceived, net_InnerReceiveUnsafe, timeoutMs, 0);
+    int rc = net_ProcessRecoursively(ctx, buffer, bufferSz, &totalReceived, net_InnerReceiveUnsafe, timeoutMs, 0);
     if (rc == ERR_OK) {
         NET_EXIT("net_Receive", RC_SUCCESS, 0);
         return totalReceived;
@@ -334,7 +336,6 @@ int net_Receive(NetTransportContext *ctx, const char* buffer, const uint32_t buf
     NET_MSG("the receive was failed with rc=%d\r\n", rc);
     NET_EXIT("net_Receive", RC_ERROR, 1);
     return RC_ERROR;
-
 }
 
 int net_Destroy(NetTransportContext *netTransportContext) {
@@ -343,9 +344,9 @@ int net_Destroy(NetTransportContext *netTransportContext) {
     return RC_SUCCESS;
 }
 
-int net_InnerSendUnsafe(struct netconn *conn, char* buffer, const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs) {
+int net_InnerSendUnsafe(NetTransportContext *ctx, char* buffer, const uint32_t bufferSz, uint16_t *sent, uint32_t timeoutMs) {
     NET_ENTER("net_InnerSendUnsafe");
-
+    struct netconn *conn = ctx->connection.conn;
     netconn_set_sendtimeout(conn, timeoutMs);
     int rc;
     if (conn->type == NETCONN_TCP) {
@@ -378,14 +379,18 @@ int net_InnerSendUnsafe(struct netconn *conn, char* buffer, const uint32_t buffe
     return RC_SUCCESS;
 }
 
-int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer, const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs) {
+int net_InnerReceiveUnsafe(NetTransportContext *ctx, char* buffer, const uint32_t bufferSz, uint16_t *received, uint32_t timeoutMs) {
     NET_ENTER("net_InnerReceiveUnsafe");
-
+    struct netconn *conn = ctx->connection.conn;
     if (net_activeBuf == NULL) {
         net_activeBufPos = 0;
         netconn_set_recvtimeout(conn, timeoutMs);
         int rc = netconn_recv(conn, &net_activeBuf);
         if (rc) {
+            if (rc == ERR_CLSD && ctx->ssl != NULL) {
+                NET_MSG("WARNING - connection got closed, marking that in SSL session\r\n");
+                ctx->ssl->options.isClosed = 1;
+            }
             NET_MSG("ERROR: netconn_recv %d\r\n", rc);
             NET_EXIT("net_InnerReceiveUnsafe", rc, 1);
             return rc;
@@ -428,7 +433,7 @@ int net_InnerReceiveUnsafe(struct netconn *conn, char* buffer, const uint32_t bu
         char remBuff[remLength + 1];
         uint16_t remReadLength;
 
-        int rc = net_InnerReceiveUnsafe(conn, remBuff, remLength, &remReadLength, timeoutMs);
+        int rc = net_InnerReceiveUnsafe(ctx, remBuff, remLength, &remReadLength, timeoutMs);
         if (rc) {
             NET_MSG("ERROR: net_InnerReceiveUnsafe %d\r\n", rc);
             NET_EXIT("net_InnerReceiveUnsafe", rc, 1);

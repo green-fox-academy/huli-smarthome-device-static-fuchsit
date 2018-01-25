@@ -5,60 +5,50 @@
 #include "net_secure.h"
 
 typedef enum HTTP_ResultCode {
-    HTTP_RC_OK = 0,
-    HTTP_RC_ILLEGAL_STATE = -1,
-    HTTP_RC_INVALID_ARGS = -2,
-    HTTP_RC_OUT_OF_MEMORY = -100,
+    HTTP_RC_OK = 0, HTTP_RC_ILLEGAL_STATE = -1, HTTP_RC_INVALID_ARGS = -2, HTTP_RC_OUT_OF_MEMORY = -100,
 } HTTP_ResultCode;
 
 /**
  * HTTP request methods
  */
 typedef enum HTTP_Method {
-    HTTP_GET = 0,
-    HTTP_POST,
-    HTTP_DELETE,
-    HTTP_PUT,
-    HTTP_OPTIONS,
-    HTTP_CONNECT
+    HTTP_GET = 0, HTTP_POST, HTTP_DELETE, HTTP_PUT, HTTP_OPTIONS, HTTP_CONNECT
 } HTTP_Method;
 
 /**
  * String representation of methods
  */
-static const char *HTTP_MethodStrs[6] = {
-    "GET",
-    "POST",
-    "DELETE",
-    "PUT",
-    "OPTIONS",
-    "CONNECT"
-};
+static const char *HTTP_MethodStrs[6] = { "GET", "POST", "DELETE", "PUT", "OPTIONS", "CONNECT" };
+
+/**
+ * The supported connection modes
+ */
+typedef enum HTTP_ConnectionMode {
+    HTTP_CONN_CLOSE = 0, HTTP_CONN_KEEPALIVE,
+} HTTP_ConnectionMode;
+
+/**
+ * The Connection header's supported values
+ */
+static const char *HTTP_ConnectionModeStrs[2] = { "close", "keep-alive" };
 
 /**
  * Supported content types
  */
 typedef enum HTTP_ContentType {
-    HTTP_CONTENT_TYPE_FORM = 0,
-    HTTP_CONTENT_TYPE_TEXT_HTML,
-    HTTP_CONTENT_TYPE_JSON
+    HTTP_CONTENT_TYPE_FORM = 0, HTTP_CONTENT_TYPE_TEXT_HTML, HTTP_CONTENT_TYPE_JSON
 } HTTP_ContentType;
 
 /**
  * Content type strings
  */
-static const char *HTTP_ContentTypeStrs[3] = {
-    "application/x-www-form-urlencoded",
-    "text/html",
-    "application/json"
-};
+static const char *HTTP_ContentTypeStrs[3] = { "application/x-www-form-urlencoded", "text/html", "application/json" };
 
 /**
  * The HTTP protocol
  */
 typedef enum HTTP_Protocol {
-    HTTP_HTTP,
-    HTTP_HTTPS
+    HTTP_HTTP, HTTP_HTTPS
 } HTTP_Protocol;
 
 typedef struct HTTP_KeyValue HTTP_KeyValue;
@@ -133,7 +123,5 @@ int http_NetSendInternal(NetTransportContext *ctx, HTTP_Protocol protocol, char*
 int http_NetReceiveInternal(NetTransportContext *ctx, HTTP_Protocol protocol, char* data, uint16_t dataSize);
 
 int http_NetDisconnectInternal(NetTransportContext *ctx, HTTP_Protocol protocol);
-
-
 
 #endif // HTTP_CLIENT_INTERNAL

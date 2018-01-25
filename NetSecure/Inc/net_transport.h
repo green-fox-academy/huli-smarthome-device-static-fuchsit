@@ -139,7 +139,8 @@ int net_Send(NetTransportContext *ctx, const char* buffer, const uint32_t buffer
 
 /**
  *  @brief      Platform-dependent data sending implementation
- *  @discussion Use the platform-specific tools to receive data from the peer
+ *  @discussion Use the platform-specific tools to receive data from the peer. Note that this function DOES NOT
+ *              closes the buffer with string terminating character!
  *  @param      ctx     				a pointer to the user-defined context
  *  @param		buffer					the buffer in which we need to read the data
  *  @param		bufferSz				the size of the data to be read

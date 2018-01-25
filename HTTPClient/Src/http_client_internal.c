@@ -9,7 +9,7 @@
 
 #define HTTP_DEFAULT_TIMEOUT            30000
 
-static const char httpi_RESERVED_CHARS[] = {'!', '#', '$', '&', '\'', '(', ')', '*', '+', ',', ':', ';', '=', '?', '@', '[', ']' };
+static const char httpi_RESERVED_CHARS[] = { '!', '#', '$', '&', '\'', '(', ')', '*', '+', ',', ':', ';', '=', '?', '@', '[', ']' };
 
 /**
  * URL decoding state machine helper
@@ -66,7 +66,12 @@ int http_NetSendInternal(NetTransportContext *ctx, HTTP_Protocol protocol, char*
 }
 
 int http_NetReceiveInternal(NetTransportContext *ctx, HTTP_Protocol protocol, char* data, uint16_t dataSize) {
-    return protocol == HTTP_HTTP ? net_Receive(ctx, data, dataSize, HTTP_DEFAULT_TIMEOUT) : net_TLSReceive(ctx, data, dataSize, HTTP_DEFAULT_TIMEOUT);
+    int result = protocol == HTTP_HTTP ? net_Receive(ctx, data, dataSize, HTTP_DEFAULT_TIMEOUT) : net_TLSReceive(ctx, data, dataSize, HTTP_DEFAULT_TIMEOUT);
+    if (result < 0) {
+        return result;
+    }
+    data[result] = '\0';
+    return result;
 }
 
 int http_NetDisconnectInternal(NetTransportContext *ctx, HTTP_Protocol protocol) {
@@ -77,8 +82,8 @@ int http_HostPortFromURL(char *url, HTTP_Protocol *protocol, char **host, uint16
     HTTPI_ENTER("http_HostPortFromURL");
     char *protocolStr = strtok(url, ":");
     char *hostPortStr = strtok(NULL, "/");
-    *uri = strtok(NULL, "");
-    *host = strtok(hostPortStr, ":");
+    *uri = strdup(strtok(NULL, ""));
+    *host = strdup(strtok(hostPortStr, ":"));
     char *portStr = strtok(NULL, ":");
     *port = 0;
 
@@ -172,7 +177,6 @@ int http_URLDecode(char *result, char *toDecode) {
     return resPos;
 }
 
-
 int http_AssembleRequest(HTTP_Request *request, char *buffer) {
     HTTPI_ENTER("http_AssembleRequest");
     char *wptr = buffer;
@@ -184,16 +188,18 @@ int http_AssembleRequest(HTTP_Request *request, char *buffer) {
     }
     char contentLengthStr[10];
     itoa(contentLength, contentLengthStr, 10);
-
-    int rc = http_AddKeyValueToList(&request->headers, "Content-Length", contentLengthStr);
-    if (rc != HTTP_RC_OK) {
-        HTTPI_MSG("ERROR: adding content-length header failed (%d)!\r\n", rc);
-        HTTPI_EXIT("http_AssembleRequest", rc, 1);
-        return rc;
+    if (request->method != HTTP_GET) {
+        int rc = http_AddKeyValueToList(&request->headers, "Content-Length", contentLengthStr);
+        if (rc != HTTP_RC_OK) {
+            HTTPI_MSG("ERROR: adding content-length header failed (%d)!\r\n", rc);
+            HTTPI_EXIT("http_AssembleRequest", rc, 1);
+            return rc;
+        }
     }
+
     // when writing GET request with parameters, we need to append the parameters to the URI
     if (request->method == HTTP_GET && request->params.first != NULL) {
-        wptr += sprintf(wptr, "%s /%s?%s", HTTP_MethodStrs[request->method], request->uri, request->body);
+        wptr += sprintf(wptr, "%s /%s?%s HTTP/1.1\r\n", HTTP_MethodStrs[request->method], request->uri, request->body);
     }
     else {
         // not a GET request or there's no param, the body will come in the end
@@ -208,7 +214,7 @@ int http_AssembleRequest(HTTP_Request *request, char *buffer) {
     }
     // writing the second \r\n to mark that the body comes
     wptr += sprintf(wptr, "\r\n");
-    if (contentLength > 0) {
+    if (contentLength > 0 && request->method != HTTP_GET) {
         wptr += sprintf(wptr, "%s", request->body);
     }
     HTTPI_EXIT("http_AssembleRequest", 0, 0);

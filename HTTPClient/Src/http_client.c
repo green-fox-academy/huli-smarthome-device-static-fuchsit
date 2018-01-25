@@ -5,7 +5,7 @@
 #include "http_client.h"
 #include "smarthome_log.h"
 
-#define	HTTP_REQUEST_MAX_SIZE			2048
+#define	HTTP_REQUEST_MAX_SIZE			4096
 
 #define HTTP_ENTER(fnc)					SHOME_LogEnter("http", fnc)
 #define HTTP_MSG(fmt, ...)				SHOME_LogMsg("http", fmt, ##__VA_ARGS__)
@@ -19,22 +19,25 @@ typedef enum HTTP_ResponseParsingState {
 
 int http_CreateRequest(char *url, HTTP_Method method, HTTP_ContentType contentType, HTTP_Request **requestPPtr) {
     HTTP_ENTER("http_CreateRequest");
-    *requestPPtr = malloc(sizeof(HTTP_Request));
-    HTTP_Request *request = *requestPPtr;
+
+    HTTP_Request *request = *requestPPtr = malloc(sizeof(HTTP_Request));
+
     if (request == NULL) {
         HTTP_MSG("ERROR: out of memory\r\n");
         HTTP_EXIT("http_CreateRequest", HTTP_RC_OUT_OF_MEMORY, 1);
         return HTTP_RC_OUT_OF_MEMORY;
     }
-    request->url = url;
+
+    char *urlCpy = malloc(strlen(url) + 1);
+    strcpy(urlCpy, url);
+
+    request->url = urlCpy;
     request->method = method;
     request->contentType = contentType;
     request->body = NULL;
     request->headers.first = request->headers.last = NULL;
     request->params.first = request->params.last = NULL;
 
-    char *urlCpy = malloc(strlen(url) + 1);
-    strcpy(urlCpy, url);
     int rc = http_HostPortFromURL(urlCpy, &request->protocol, &request->host, &request->port, &request->uri);
     if (rc != HTTP_RC_OK) {
         HTTP_MSG("ERROR: could not create url: %d\r\n", rc);
@@ -119,6 +122,8 @@ int http_SetBody(HTTP_Request *request, const char *body) {
 int http_Execute(NetTransportContext *ctx, HTTP_Request *request, HTTP_Response **response) {
     HTTP_ENTER("http_Execute");
     char rq[HTTP_REQUEST_MAX_SIZE];
+
+
     uint16_t rqSize = http_AssembleRequest(request, rq);
     if (rqSize > HTTP_REQUEST_MAX_SIZE - 1) {
         HTTP_MSG("ERROR: buffer overflow, the request size(%d) is bigger than the buffer(%d)\r\n", rqSize, HTTP_REQUEST_MAX_SIZE - 1);

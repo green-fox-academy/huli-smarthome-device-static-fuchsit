@@ -20,7 +20,7 @@ extern "C" {
 #define XTIME(tl)       net_CustomTimestampCallback((tl))
 
 #undef  SINGLE_THREADED
-//#define SINGLE_THREADED
+#define SINGLE_THREADED
 
 #undef WOLFSSL_USER_IO
 #define WOLFSSL_USER_IO
@@ -248,7 +248,7 @@ extern "C" {
 #define BENCH_EMBEDDED
 
 #undef  USE_CERT_BUFFERS_2048
-#define USE_CERT_BUFFERS_2048
+//#define USE_CERT_BUFFERS_2048
 
 
 /* ------------------------------------------------------------------------- */
@@ -299,7 +299,7 @@ extern "C" {
     /* Use built-in P-RNG (SHA256 based) with HW RNG */
     /* P-RNG + HW RNG (P-RNG is ~8K) */
     #undef  HAVE_HASHDRBG
-    #define HAVE_HASHDRBG
+    //#define HAVE_HASHDRBG
 
     extern uint32_t net_CustomRandomCallback(void);
     #undef  CUSTOM_RAND_GENERATE
