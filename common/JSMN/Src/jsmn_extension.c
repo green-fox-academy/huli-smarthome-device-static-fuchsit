@@ -65,30 +65,10 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 					JSON_STRING + t[i+1].start);
 			conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-		}
-/*		} else if (jsoneq(JSON_STRING, &t[i], "ip") == 0) {
-			 We may want to do strtol() here to get numeric value
-			printf("- ip: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		}*/
-//            else if (jsoneq(JSON_STRING, &t[i], "groups") == 0) {
-//			int j;
-//			printf("- Groups:\n");
-//			if (t[i+1].type != JSMN_ARRAY) {
-//				continue; /* We expect groups to be an array of strings */
-//			}
-//			for (j = 0; j < t[i+1].size; j++) {
-//				jsmntok_t *g = &t[i+j+2];
-//				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
-//			}
-//			i += t[i+1].size + 1;
-		else {
+		} else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					JSON_STRING + t[i].start);
 		}
 	}
-
-
 	return EXIT_SUCCESS;
 };

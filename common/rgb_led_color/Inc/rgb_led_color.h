@@ -21,7 +21,6 @@ int green;
 #define GREENPIN GPIO_PIN_15
 #define GREEN CCR1
 
-//UART_HandleTypeDef	uartHandle;
 TIM_HandleTypeDef	TimHandleR;
 TIM_HandleTypeDef	TimHandleB;
 TIM_HandleTypeDef	TimHandleG;
@@ -33,7 +32,6 @@ GPIO_InitTypeDef	LEDBLUE;
 GPIO_InitTypeDef	LEDGREEN;
 
 void RGB_Init(void);
-//void UART_Init(void);
 void LED_Init_RED(void);
 void LED_Init_BLUE(void);
 void LED_Init_GREEN(void);

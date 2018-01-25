@@ -27,7 +27,7 @@ typedef enum Device_Type {
 
 /*
  * This struct will carry all configuration information for the given IoT device
- * device specifikus device config, megfelelõ értékekkel
+ * For all device!
  */
 typedef struct device_config{
     char *device_name;
