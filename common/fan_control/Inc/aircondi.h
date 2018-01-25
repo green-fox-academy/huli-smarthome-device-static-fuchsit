@@ -4,6 +4,8 @@
  *  Created on: Jan 25, 2018
  *      Author: Ádám
  */
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef EXAMPLE_USER_AIRCONDI_H_
 #define EXAMPLE_USER_AIRCONDI_H_
@@ -15,14 +17,17 @@ TIM_HandleTypeDef TimHandle;
 I2C_HandleTypeDef I2cHandle;
 TIM_OC_InitTypeDef TimerOCConfig;
 
-int reg = 0;
-int temp = 0;
-int user_max = 0;
-int user_min = 0;
+int reg;
+int temp;
+int user_max;
+int user_min;
 
-void SystemClock_Config(void);
-void Peripherals_Init(void);
 void get_temperatura();
 void temp_set(int user_min, int user_max);
+void Fan_Init(void);
+void temp_sensor_init(void);
+void timer_pwm_config();
+
+void Project_Airconditioner (char *Min, char *Max);
 
 #endif /* EXAMPLE_USER_AIRCONDI_H_ */

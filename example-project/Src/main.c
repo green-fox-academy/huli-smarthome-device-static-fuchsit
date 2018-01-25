@@ -60,6 +60,7 @@ m * @file    Templates/Src/main.c
 #include "heartbeat.h"
 #include "http_hanlder.h"
 #include "rgb_led_color.h"
+#include "aircondi.h"
 
 #define NEED_WIFI		1
 
@@ -202,8 +203,8 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		device.device_type = COFFEE_MAKER;
 	} else if (strstr(device.device_name, "SMART_LIGTH")) {
 		device.device_type = SMART_LIGTH;
-	} else if (strstr(device.device_name, "WEATHER_STATION")) {
-		device.device_type = WEATHER_STATION;
+	} else if (strstr(device.device_name, "AIR_CONDITIONER")) {
+		device.device_type = AIR_CONDITIONER;
 	}
 	switch (device.device_type) {
 	case LED_CONTROLLER:
@@ -216,8 +217,9 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	case SMART_LIGTH:
 		//call SMART_LIGTH;
 		break;
-	case WEATHER_STATION:
-		//call WEATHER_STATION;
+	case AIR_CONDITIONER:
+		//call AIR_CONDITIONER;
+		Project_Airconditioner (device.temperature);
 		break;
 	}
 
