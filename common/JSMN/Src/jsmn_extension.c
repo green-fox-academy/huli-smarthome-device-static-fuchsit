@@ -51,9 +51,7 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 	}
 
 	/* Loop over all keys of the root object */
-	/* KELL: device specifikus parser, device1, device2, etc.
-	 * switch/case dönti el, hogy mit parsolok, mit várok commandnak, dev param alapján
-	 */
+
 	for (i = 1; i < r; i++) {
 		if (jsoneq(JSON_STRING, &t[i], "Device") == 0) {
 			/* We may use strndup() to fetch string value */

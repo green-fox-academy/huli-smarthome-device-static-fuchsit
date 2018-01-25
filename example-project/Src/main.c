@@ -209,16 +209,34 @@ int main(void)
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
-
-	// FUT execute_command(*device, in_jsonn == message, out_json);
-
 	parse_JSON(&device, message);
-	printf("%s\n", device.device_name);
-	printf("%s\n", device.color);
-	/*
-	 * rgb(device.color);
-	 * device specifikus switch/case, hogy mit és honnan hívjon meg!
-	 */
+
+//	printf("%s\n", device.device_name);
+//	printf("%s\n", device.color);
+
+	if (strstr(device.device_name, "LED_CONTROLLER")) {
+		device.device_type = LED_CONTROLLER;
+	} else if (strstr(device.device_name, "COFFEE_MAKER")) {
+		device.device_type = COFFEE_MAKER;
+	} else if (strstr(device.device_name, "SMART_LIGTH")) {
+		device.device_type = SMART_LIGTH;
+	} else if (strstr(device.device_name, "WEATHER_STATION")) {
+		device.device_type = WEATHER_STATION;
+	}
+	switch (device.device_type) {
+	case LED_CONTROLLER:
+		//call LED_CONTROLLER;
+		break;
+	case COFFEE_MAKER:
+		//call COFFEE_MAKER;
+		break;
+	case SMART_LIGTH:
+		//call SMART_LIGTH;
+		break;
+	case WEATHER_STATION:
+		//call WEATHER_STATION;
+		break;
+	}
 
 	/* FUT report status back
 	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))

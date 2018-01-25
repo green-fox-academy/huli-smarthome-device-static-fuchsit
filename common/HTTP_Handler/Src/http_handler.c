@@ -10,7 +10,7 @@ device_config_t device;
 
 int set_device_params (device_config_t *device, char in_body[])
 {
-    parse_JSON(device, in_body);
+    //parse_JSON(device, in_body);
 
     return 1;
 }
@@ -27,8 +27,8 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
  * FUT
  * handle if there is no {} in the http
  */
-    printf("first: %d\n", first);
-    printf("last: %d\n", last);
+    printf("first: %s\n", first);
+    printf("last: %s\n", last);
 
     if (first != last) { // there is a JSON body
 		size_t first_pos =  first - &in_buffer[0];
