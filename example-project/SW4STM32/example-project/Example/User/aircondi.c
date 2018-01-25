@@ -82,11 +82,40 @@ void timer_pwm_config() {
 	HAL_TIM_PWM_Start(&TimHandle , TIM_CHANNEL_3);
 }
 
+void airconditioner_temperature_range_parsing(char temperature_range[]){
+
+    char *text_one;
+    char *text_two;
+
+    const char ch[2] = "-";
+    char *token;
+    token = strtok(temperature_range, ch);
+    text_one = token;
+
+    while(token != NULL){
+        text_two = token;
+        token = strtok(NULL, ch);
+    }
+    user_min = strtol(text_two , NULL , 10);
+    user_max = strtol(text_one , NULL , 10);
+    int temp_buff = 0;
+    if(user_min > user_max){
+    	temp_buff = user_max;
+        user_max = user_min;
+        user_min = temp_buff;
+    } else {
+        printf("Bazsi Szeretlek\n");
+    }
+
+}
+
 void Project_Airconditioner (char *Temperature) {
-	//ide kell a parse
 	timer_pwm_config();
 	Fan_Init();
 	temp_sensor_init();
+	airconditioner_temperature_range_parsing(Temperature);
+	//printf ("FASZA LÁNGOS!!! this-> %d, %d\n", user_min, user_max );
 	temp_set(user_min, user_max);
+	//printf ("FASZA BUKTA!!! this-> %d, %d\n", reg, temp );
 }
 

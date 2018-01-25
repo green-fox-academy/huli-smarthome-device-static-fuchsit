@@ -28,6 +28,7 @@ void Fan_Init(void);
 void temp_sensor_init(void);
 void timer_pwm_config();
 
-void Project_Airconditioner (char *Min, char *Max);
+void airconditioner_temperature_range_parsing(char temperature_range[]);
+void Project_Airconditioner (char *Temperature);
 
 #endif /* EXAMPLE_USER_AIRCONDI_H_ */
