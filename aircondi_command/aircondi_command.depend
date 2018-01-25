@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1516893942 source:c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\aircondi_command\main.c
+	<stdio.h>
+	<stdlib.h>
+
