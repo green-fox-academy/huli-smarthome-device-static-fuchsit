@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "main.h"
+#include <string.h>
 
 void json_hexa_for_rgbled(char led_color_hexa_RGB[]);
 
@@ -19,7 +21,7 @@ int green;
 #define GREENPIN GPIO_PIN_15
 #define GREEN CCR1
 
-UART_HandleTypeDef	uartHandle;
+//UART_HandleTypeDef	uartHandle;
 TIM_HandleTypeDef	TimHandleR;
 TIM_HandleTypeDef	TimHandleB;
 TIM_HandleTypeDef	TimHandleG;
@@ -30,24 +32,25 @@ GPIO_InitTypeDef	LEDRED;
 GPIO_InitTypeDef	LEDBLUE;
 GPIO_InitTypeDef	LEDGREEN;
 
-static void RGB_Init(void);
-static void UART_Init(void);
-static void LED_Init_RED(void);
-static void LED_Init_BLUE(void);
-static void LED_Init_GREEN(void);
+void RGB_Init(void);
+//void UART_Init(void);
+void LED_Init_RED(void);
+void LED_Init_BLUE(void);
+void LED_Init_GREEN(void);
 
-static void TIMER_Init_RED(void);
-static void PWM_Init_RED(void);
+void TIMER_Init_RED(void);
+void PWM_Init_RED(void);
 
-static void TIMER_Init_BLUE(void);
-static void PWM_Init_BLUE(void);
+void TIMER_Init_BLUE(void);
+void PWM_Init_BLUE(void);
 
-static void TIMER_Init_GREEN(void);
-static void PWM_Init_GREEN(void);
+void TIMER_Init_GREEN(void);
+void PWM_Init_GREEN(void);
+void Project_Led_Lights (char *color);
 
-static void LED_ON (int _red, int _blue, int _green);
+void LED_ON (int _red, int _blue, int _green);
 
-static void LED_OFF (void);
+void LED_OFF (void);
 
 
 

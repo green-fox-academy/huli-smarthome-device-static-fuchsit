@@ -64,6 +64,7 @@ m * @file    Templates/Src/main.c
 #include "device_info.h"
 #include "heartbeat.h"
 #include "http_hanlder.h"
+#include "rgb_led_color.h"
 
 #define NEED_WIFI		1
 
@@ -226,6 +227,7 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	switch (device.device_type) {
 	case LED_CONTROLLER:
 		//call LED_CONTROLLER;
+		Project_Led_Lights (device.color);
 		break;
 	case COFFEE_MAKER:
 		//call COFFEE_MAKER;
