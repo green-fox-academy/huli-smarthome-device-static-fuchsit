@@ -114,8 +114,15 @@ void Project_Airconditioner (char *Temperature) {
 	Fan_Init();
 	temp_sensor_init();
 	airconditioner_temperature_range_parsing(Temperature);
-	//printf ("FASZA LÁNGOS!!! this-> %d, %d\n", user_min, user_max );
-	temp_set(user_min, user_max);
-	//printf ("FASZA BUKTA!!! this-> %d, %d\n", reg, temp );
+	while (1) {
+		temp_set(user_min, user_max);
+		HAL_Delay(500);
+		printf("Temperature: %d\n", temp);
+		printf("min: %d\n", user_min);
+		printf("max: %d\n", user_max);
+		printf("CCR3: %d\n", TIM2->CCR3);
+
+	}
+
 }
 

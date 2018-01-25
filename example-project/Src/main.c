@@ -497,7 +497,7 @@ static void SW_STACK_Init() {
 
 	// initialize google stack
 	GGL_DeviceDef device;
-	device.deviceId = "test-iot-device-2";
+	device.deviceId = "test-iot-device";
 	device.deviceRegistry = "greenfox-device-registry";
 	device.projectId = "static-aventurin-fuchsit";
 	device.region = "europe-west1";
