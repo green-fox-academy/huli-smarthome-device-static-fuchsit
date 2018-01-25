@@ -51,19 +51,24 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 	}
 
 	/* Loop over all keys of the root object */
+	/* KELL: device specifikus parser, device1, device2, etc.
+	 * switch/case dönti el, hogy mit parsolok, mit várok commandnak, dev param alapján
+	 */
 	for (i = 1; i < r; i++) {
-		if (jsoneq(JSON_STRING, &t[i], "Color") == 0) {
+		if (jsoneq(JSON_STRING, &t[i], "Device") == 0) {
 			/* We may use strndup() to fetch string value */
+			printf("- Device: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			conf_struct->device_name = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+			i++;
+		} else if (jsoneq(JSON_STRING, &t[i], "Color") == 0) {
+			 //We may additionally check if the value is either "true" or "false"
 			printf("- Color: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
-            conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+			conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-/*		} else if (jsoneq(JSON_STRING, &t[i], "id") == 0) {
-			 We may additionally check if the value is either "true" or "false"
-			printf("- id: %.*s\n", t[i+1].end-t[i+1].start,
-					JSON_STRING + t[i+1].start);
-			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "ip") == 0) {
+		}
+/*		} else if (jsoneq(JSON_STRING, &t[i], "ip") == 0) {
 			 We may want to do strtol() here to get numeric value
 			printf("- ip: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
@@ -80,7 +85,7 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 //				printf("  * %.*s\n", g->end - g->start, JSON_STRING + g->start);
 //			}
 //			i += t[i+1].size + 1;
-		} else {
+		else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					JSON_STRING + t[i].start);
 		}

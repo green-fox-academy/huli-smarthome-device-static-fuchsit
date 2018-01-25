@@ -213,7 +213,13 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	// FUT execute_command(*device, in_jsonn == message, out_json);
 
 	parse_JSON(&device, message);
+	printf("%s\n", device.device_name);
 	printf("%s\n", device.color);
+	/*
+	 * rgb(device.color);
+	 * device specifikus switch/case, hogy mit és honnan hívjon meg!
+	 */
+
 	/* FUT report status back
 	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
 			!= RC_SUCCESS) {

@@ -19,14 +19,15 @@ typedef enum State_Of_Operation {
 } State_Of_Operation;
 
 typedef enum Device_Type {
-	DEVICE_COFFEE_MAKER,
-	DEVICE_SMART_LIGTH,
-	DEVICE_LED_CONTROLLER,
-	DEVICE_WEATHRE_STATION
+	LED_CONTROLLER,
+	COFFEE_MAKER,
+	SMART_LIGTH,
+	WEATHER_STATION
 } Device_Type;
 
 /*
  * This struct will carry all configuration information for the given IoT device
+ * device specifikus device config, megfelelõ értékekkel
  */
 typedef struct device_config{
     char *device_name;
