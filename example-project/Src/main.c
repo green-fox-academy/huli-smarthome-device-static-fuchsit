@@ -64,6 +64,7 @@ m * @file    Templates/Src/main.c
 #include "device_info.h"
 #include "heartbeat.h"
 #include "http_hanlder.h"
+#include "rgb_led_color.h"
 
 #define NEED_WIFI		1
 
@@ -107,9 +108,9 @@ uint8_t IP_Addr[4];
 /*
  * added to test JSON parser
  */
-static const char *JSON_STRING =
+/*static const char *JSON_STRING =
 			"{\"device\": \"johndoe\", \"id\": false, \"ip\": 1000,\n  "
-			"}";
+			"}";*/
 
 extern MqttClient mqttClient;
 
@@ -158,7 +159,7 @@ int main(void)
 	/*
 	 * set initial device state
 	 */
-	device.state_of_device = STATE_SSDP_DISCOVERY;
+	device.state_of_device = STATE_GGL_CORE;
 
 	/*
 	 * FUT
@@ -177,8 +178,8 @@ int main(void)
 	*/
 
 	/* to test JSMN parser*/
-	parse_JSON(&device, JSON_STRING);
-	printf("conf dev: %s\n", device.device_name);
+	//parse_JSON(&device, JSON_STRING);
+	//printf("conf dev: %s\n", device.device_name);
 
 	while (1) {
 
@@ -209,8 +210,35 @@ int main(void)
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
+	parse_JSON(&device, message);
 
-	// FUT execute_command(*device, in_jsonn == message, out_json);
+//	printf("%s\n", device.device_name);
+//	printf("%s\n", device.color);
+
+	if (strstr(device.device_name, "LED_CONTROLLER")) {
+		device.device_type = LED_CONTROLLER;
+	} else if (strstr(device.device_name, "COFFEE_MAKER")) {
+		device.device_type = COFFEE_MAKER;
+	} else if (strstr(device.device_name, "SMART_LIGTH")) {
+		device.device_type = SMART_LIGTH;
+	} else if (strstr(device.device_name, "WEATHER_STATION")) {
+		device.device_type = WEATHER_STATION;
+	}
+	switch (device.device_type) {
+	case LED_CONTROLLER:
+		//call LED_CONTROLLER;
+		Project_Led_Lights (device.color);
+		break;
+	case COFFEE_MAKER:
+		//call COFFEE_MAKER;
+		break;
+	case SMART_LIGTH:
+		//call SMART_LIGTH;
+		break;
+	case WEATHER_STATION:
+		//call WEATHER_STATION;
+		break;
+	}
 
 	/* FUT report status back
 	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
