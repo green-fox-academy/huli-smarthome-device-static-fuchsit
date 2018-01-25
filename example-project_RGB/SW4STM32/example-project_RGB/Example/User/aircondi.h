@@ -17,8 +17,8 @@ TIM_OC_InitTypeDef TimerOCConfig;
 
 int reg = 0;
 int temp = 0;
-int user_max;
-int user_min;
+int user_max = 0;
+int user_min = 0;
 
 void SystemClock_Config(void);
 void Peripherals_Init(void);
