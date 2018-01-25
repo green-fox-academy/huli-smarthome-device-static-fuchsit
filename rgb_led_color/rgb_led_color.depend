@@ -1,5 +1,11 @@
 # depslib dependency file v1.0
-1516373788 source:c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\rgb_led_color\main.c
+1516838887 source:c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\rgb_led_color\main.c
+	"rgb_led_color.h"
+
+1516872427 c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\rgb_led_color\rgb_led_color.h
 	<stdio.h>
 	<stdlib.h>
+
+1516871687 source:c:\users\balazs\gfx\smarthome_devices\board\stm32cube_fw_l4_v1.10.0\projects\fuchsit\rgb_led_color\rgb_led_color.c
+	"rgb_led_color.h"
 
