@@ -129,6 +129,7 @@ void HTTPS_ServerStart(device_config_t *device);
 int HandleClientCallback_HTTPS(NetTransportContext *ctx);
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
+void report_status_color ();
 static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
 static void SimpleMQTT_Example(device_config_t *device);
 
@@ -210,6 +211,7 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	case LED_CONTROLLER:
 		//call LED_CONTROLLER;
 		Project_Led_Lights (device.color);
+		report_status_color ();
 		break;
 	case COFFEE_MAKER:
 		//call COFFEE_MAKER;
@@ -223,6 +225,11 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		break;
 	}
 
+	return 0;
+}
+
+void report_status_color () {
+
 	int rc;
 	char buffer[50];
 	sprintf (buffer, "{\"state\": \"%s\" }", device.color);
@@ -231,7 +238,6 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
 				MqttClient_ReturnCodeToString(rc));
 	}
-	return 0;
 }
 
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
