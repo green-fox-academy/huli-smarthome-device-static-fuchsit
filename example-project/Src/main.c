@@ -223,15 +223,14 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		break;
 	}
 
-	/* FUT report status back
-	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
+	int rc;
+	char buffer[50];
+	sprintf (buffer, "{\"state\": \"%s\" }", device.color);
+	if ((rc = GGL_MQTT_Publish("state", buffer))
 			!= RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
 				MqttClient_ReturnCodeToString(rc));
-		return;
 	}
-	 */
-
 	return 0;
 }
 
@@ -497,7 +496,7 @@ static void SW_STACK_Init() {
 
 	// initialize google stack
 	GGL_DeviceDef device;
-	device.deviceId = "test-iot-device";
+	device.deviceId = "test-iot-device-2";
 	device.deviceRegistry = "greenfox-device-registry";
 	device.projectId = "static-aventurin-fuchsit";
 	device.region = "europe-west1";
