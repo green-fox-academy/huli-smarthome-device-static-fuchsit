@@ -24,7 +24,7 @@ void airconditioner_temperature_range_parsing(char temperature_range[]){
     char *text_two;
 
     const char ch[2] = "-";
-    char *token;
+    char token;
     token = strtok(temperature_range, ch);
     text_one = token;
 
