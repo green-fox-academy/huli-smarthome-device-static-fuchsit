@@ -240,11 +240,11 @@ void report_status_color () {
 	}
 }
 
-void report_fan_state (char *fan_state) {
+void report_fan_state () {
 
 	int rc;
 	char buffer[50];
-	sprintf (buffer, "{\"state\": \"%s\" }", fan_state);
+	sprintf (buffer, "{\"Temperature state\": \"%d\" }", temp);
 	if ((rc = GGL_MQTT_Publish("state", buffer))
 			!= RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,

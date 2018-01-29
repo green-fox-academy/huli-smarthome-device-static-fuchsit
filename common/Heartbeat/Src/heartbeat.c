@@ -12,7 +12,7 @@
  * FUT
  * add operation continuity control to GGL mode too
  */
-
+#include "main.h"
 #include "heartbeat.h"
 #include "aircondi.h"
 

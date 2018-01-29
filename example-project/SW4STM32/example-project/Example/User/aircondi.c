@@ -5,12 +5,9 @@
  *  Created on: Jan 25, 2018
  *      Author: Ádám
  */
-#include "main.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include "aircondi.h"
-#include "heartbeat.h"
-#include "google_iot.h"
+#include "main.h"
+
 int fan_flag = 0;
 
 void temp_set(int user_min, int user_max) {
@@ -19,14 +16,14 @@ void temp_set(int user_min, int user_max) {
 		TIM2 -> CCR3 = 100;
 		if (fan_flag == 0) {
 			printf("state: %d;\n", fan_flag);
-			//report_fan_state ("ON");
+			//report_fan_state ();
 			fan_flag = 1;
 		}
 	} else if (temp < user_min) {
 		TIM2 -> CCR3 = 0;
 		if (fan_flag == 1) {
 			printf("state: %d;\n", fan_flag);
-			//report_fan_state ("OFF");
+			//report_fan_state ();
 			fan_flag = 0;
 		}
 	}

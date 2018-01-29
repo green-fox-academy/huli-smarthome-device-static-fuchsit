@@ -6,6 +6,9 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include "main.h"
+#include "heartbeat.h"
+#include "device_info.h"
 
 #ifndef EXAMPLE_USER_AIRCONDI_H_
 #define EXAMPLE_USER_AIRCONDI_H_

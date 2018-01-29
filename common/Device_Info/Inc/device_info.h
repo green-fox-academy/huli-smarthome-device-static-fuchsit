@@ -36,6 +36,7 @@ typedef struct device_config{
     int device_port[12];
     char *color;
     char *temperature;
+    //char *fan_state;
     Device_Type device_type;
     State_Of_Operation state_of_device;
 } device_config_t;
