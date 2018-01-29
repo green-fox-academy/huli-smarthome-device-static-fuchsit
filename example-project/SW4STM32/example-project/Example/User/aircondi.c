@@ -9,11 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "aircondi.h"
+#include "heartbeat.h"
 
 void temp_set(int user_min, int user_max) {
-
 	get_temperatura();
-	if (temp >= user_max){
+	if (temp >= user_max) {
 		TIM2 -> CCR3 = 100;
 	} else if (temp <= user_min) {
 		TIM2 -> CCR3 = 0;
@@ -25,7 +25,7 @@ void Fan_Init(void) {
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 
 	PWM_FAN.Alternate 	= GPIO_AF1_TIM2;
-	PWM_FAN.Mode 		= GPIO_MODE_IT_RISING;
+	PWM_FAN.Mode 		= GPIO_MODE_AF_PP;
 	PWM_FAN.Pin 		= GPIO_PIN_2;
 	PWM_FAN.Pull 		= GPIO_NOPULL;
 	PWM_FAN.Speed 		= GPIO_SPEED_HIGH;
@@ -68,8 +68,8 @@ void timer_pwm_config() {
 	__HAL_RCC_TIM2_CLK_ENABLE();
 
 	TimHandle.Instance               = TIM2;
-	TimHandle.Init.Prescaler         = 1000;
-	TimHandle.Init.Period            = 50;
+	TimHandle.Init.Prescaler         = 0;
+	TimHandle.Init.Period            = 100;
 	TimHandle.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
 	TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;
 
@@ -114,15 +114,5 @@ void Project_Airconditioner (char *Temperature) {
 	Fan_Init();
 	temp_sensor_init();
 	airconditioner_temperature_range_parsing(Temperature);
-	while (1) {
-		temp_set(user_min, user_max);
-		HAL_Delay(500);
-		printf("Temperature: %d\n", temp);
-		printf("min: %d\n", user_min);
-		printf("max: %d\n", user_max);
-		printf("CCR3: %d\n", TIM2->CCR3);
-
-	}
-
 }
 
