@@ -240,6 +240,18 @@ void report_status_color () {
 	}
 }
 
+void report_fan_state (char *fan_state) {
+
+	int rc;
+	char buffer[50];
+	sprintf (buffer, "{\"state\": \"%s\" }", fan_state);
+	if ((rc = GGL_MQTT_Publish("state", buffer))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+	}
+}
+
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	char buff[512];
 

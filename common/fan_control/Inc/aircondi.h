@@ -22,6 +22,7 @@ int temp;
 int user_max;
 int user_min;
 
+
 void get_temperatura();
 void temp_set(int user_min, int user_max);
 void Fan_Init(void);

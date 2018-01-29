@@ -10,15 +10,29 @@
 #include <stdlib.h>
 #include "aircondi.h"
 #include "heartbeat.h"
+#include "google_iot.h"
+int fan_flag = 0;
 
 void temp_set(int user_min, int user_max) {
 	get_temperatura();
-	if (temp >= user_max) {
+	if (temp > user_max) {
 		TIM2 -> CCR3 = 100;
-	} else if (temp <= user_min) {
+		if (fan_flag == 0) {
+			printf("state: %d;\n", fan_flag);
+			//report_fan_state ("ON");
+			fan_flag = 1;
+		}
+	} else if (temp < user_min) {
 		TIM2 -> CCR3 = 0;
+		if (fan_flag == 1) {
+			printf("state: %d;\n", fan_flag);
+			//report_fan_state ("OFF");
+			fan_flag = 0;
+		}
 	}
 }
+
+
 
 void Fan_Init(void) {
 

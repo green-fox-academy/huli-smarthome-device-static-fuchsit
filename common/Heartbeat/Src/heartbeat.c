@@ -122,6 +122,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	//printf("callback called\n");*/
 	temp_set(user_min, user_max);
+
 	/*printf("Actual Temp: %d\n", temp);
 	printf("User min: %d\n", user_min);
 	printf("User max: %d\n", user_max);
