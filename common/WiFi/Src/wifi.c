@@ -4,6 +4,7 @@
   * @author  MCD Application Team
   * @brief   WIFI interface file.
   ******************************************************************************
+******************************************************************************
   * @attention
   *
   * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics International N.V. 
