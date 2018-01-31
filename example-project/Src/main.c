@@ -152,6 +152,7 @@ int main(void)
 	/*
 	 * FUT
 	 * check if device config was saved, and proceed accordingly
+	 *
 
 	int check_saved_device_info() {
 		if (device info saved in memory not NULL) {
@@ -221,14 +222,15 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		break;
 	}
 
-	/* FUT report status back
-	 * if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
+	// FUT report status back
+
+	int rc = 0;
+	  if ((rc = GGL_MQTT_Publish("state", "{\"state\": \"state_report\"}"))
 			!= RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
 				MqttClient_ReturnCodeToString(rc));
-		return;
+		return rc;
 	}
-	 */
 
 	return 0;
 }
@@ -501,6 +503,8 @@ static void SW_STACK_Init() {
 	device.region = "europe-west1";
 
 	GGL_NetworkDef network;
+	network.mqttPrivateKey = (char*) PRIVATE_KEY;
+	network.mqttPrivateKeySize = PRIVATE_KEY_SIZE;
 	network.mqttHost = "mqtt.googleapis.com";
 	network.mqttPort = 8883;
 

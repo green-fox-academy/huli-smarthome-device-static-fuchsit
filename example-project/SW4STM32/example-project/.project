@@ -366,6 +366,16 @@
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/GoogleIOT/Src/google_iot.c</locationURI>
 		</link>
 		<link>
+			<name>Libraries/HTTPClient/http_client.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/HTTPClient/Src/http_client.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/HTTPClient/http_client_internal.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/HTTPClient/Src/http_client_internal.c</locationURI>
+		</link>
+		<link>
 			<name>Libraries/HTTP_Handler/http_handler.c</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/common/HTTP_Handler/Src/http_handler.c</locationURI>
@@ -374,6 +384,11 @@
 			<name>Libraries/Heartbeat/heartbeat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/common/Heartbeat/Src/heartbeat.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/JSONUtils/json_utils.c</name>
+			<type>1</type>
+			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/SmarthomeCommon/JSONUtils/Src/json_utils.c</locationURI>
 		</link>
 		<link>
 			<name>Libraries/LOG/smarthome_log.c</name>
