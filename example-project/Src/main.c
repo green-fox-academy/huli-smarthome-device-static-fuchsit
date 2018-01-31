@@ -501,6 +501,8 @@ static void SW_STACK_Init() {
 	device.region = "europe-west1";
 
 	GGL_NetworkDef network;
+	network.mqttPrivateKey = (char*) PRIVATE_KEY;
+	network.mqttPrivateKeySize = PRIVATE_KEY_SIZE;
 	network.mqttHost = "mqtt.googleapis.com";
 	network.mqttPort = 8883;
 
