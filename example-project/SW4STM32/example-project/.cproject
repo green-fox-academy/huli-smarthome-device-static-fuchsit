@@ -46,6 +46,8 @@
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/wolfssl-3.13.0"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/RTCUtils/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/NTP/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/JSONUtils/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/HTTPClient/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/NetSecure/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/NetSecure/implementations/L4/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/MQTT/Inc"/>

@@ -38,9 +38,10 @@ m * @file    Templates/Src/main.c
  * - add code to handle disconnection from internet or power grid
  *  by saving actual state when state is changed to device
  * 	EPROM memory
- * - device should be able to reload the given state, if that is not working, it shoud enter to
- *   initialization mode (add exponential backoff; see example at google policy
- *   and https://en.wikipedia.org/wiki/Exponential_backoff)
+ * - device should be able to reload the given state, if that is
+ *  not working, it should enter to
+ *  initialization mode (add exponential backoff; see example at google policy
+ *  and https://en.wikipedia.org/wiki/Exponential_backoff)
  */
 
 /* Includes ------------------------------------------------------------------*/
@@ -66,8 +67,6 @@ m * @file    Templates/Src/main.c
 
 #define NTP_MAX_RETRY_COUNT			10
 #define NTP_RETRY_INTERVAL_MS		10000
-
-
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -97,11 +96,13 @@ MQTT_NetInitTypeDef mqttConfig;
 extern device_config_t device;
 extern TIM_HandleTypeDef TIM4Handle;
 
-
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
 
+/*
+ * fot testing
 extern MqttClient mqttClient;
+*/
 
 NetTransportContext netContext;
 
@@ -121,17 +122,36 @@ static void WIFI_GoOnline(void);
  * functions for SSDP discovery mode
  */
 void UDP_SSDP_ServerStart(device_config_t *device);
+
+/*
+ * handles an incoming SSDP packet
+ */
 int HandleClientCallback_SSDP(NetTransportContext *ctx);
+
 /*
  * functions for HTTPS mode
  */
+
+/*
+ * opens up sever to watie for incoming clients
+ */
 void HTTPS_ServerStart(device_config_t *device);
+/*
+ * answers an incoming HTTPS request
+ */
 int HandleClientCallback_HTTPS(NetTransportContext *ctx);
 
+/*
+ * functions for handlingg ggl connection
+ */
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
 void report_status_color ();
 static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
+
+/*
+ * developed to test mqtt connections
 static void SimpleMQTT_Example(device_config_t *device);
+*/
 
 /**
  * @brief  Main program
@@ -153,7 +173,9 @@ int main(void)
 
 	/*
 	 * FUT
-	 * check if device config was saved, and proceed accordingly
+	 * pseudo code for checking if device config was saved,
+	 * and proceed accordingly
+	 *
 
 	int check_saved_device_info() {
 		if (device info saved in memory not NULL) {
@@ -171,18 +193,12 @@ int main(void)
 
 		switch (device.state_of_device) {
 		case STATE_SSDP_DISCOVERY:
-			printf("entered SSDP state\n");
 			UDP_SSDP_ServerStart(&device);
 			device.state_of_device = STATE_HTTPS_SERVER;
 			break;
 		case STATE_HTTPS_SERVER:
-			printf("entered HTTPS state\n");
 			HTTPS_ServerStart(&device);
-			device.state_of_device = STATE_MQTT;
-			break;
-		case STATE_MQTT:
-			printf("entered simple MQTT state\n");
-			SimpleMQTT_Example(&device);
+			device.state_of_device = STATE_GGL_CORE;
 			break;
 		case STATE_GGL_CORE:
 			printf("entered GGL MQTT state\n");
@@ -196,6 +212,8 @@ int main(void)
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
+
+	// parse and evaluate incoming incoming config command from ggl cloud
 	parse_JSON(&device, message);
 
 	if (strstr(device.device_name, "LED_CONTROLLER")) {
@@ -207,23 +225,22 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	} else if (strstr(device.device_name, "AIR_CONDITIONER")) {
 		device.device_type = AIR_CONDITIONER;
 	}
+
 	switch (device.device_type) {
-	case LED_CONTROLLER:
-		//call LED_CONTROLLER;
-		Project_Led_Lights (device.color);
-		report_status_color ();
-		break;
-	case COFFEE_MAKER:
-		//call COFFEE_MAKER;
-		break;
-	case SMART_LIGTH:
-		//call SMART_LIGTH;
-		break;
-	case AIR_CONDITIONER:
-		//call AIR_CONDITIONER;
-		Project_Airconditioner (device.temperature);
-		break;
-	}
+    case LED_CONTROLLER:
+      Project_Led_Lights (device.color);
+      report_status_color ();
+      break;
+    case COFFEE_MAKER:
+      //call COFFEE_MAKER;
+      break;
+    case SMART_LIGTH:
+      //call SMART_LIGTH;
+      break;
+    case AIR_CONDITIONER:
+      Project_Airconditioner (device.temperature);
+      break;
+    }
 
 	return 0;
 }
@@ -289,9 +306,9 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 
 void HTTPS_ServerStart(device_config_t *device) {
 	net_TLSSetHandleClientConnectionCallback(HandleClientCallback_HTTPS);
-	set_restart_timeout(30000);
+	set_restart_timeout(30000); // set connection timeout to 30 sec
 	int rc = net_TLSStartServerConnection(&netContext, SOCKET_TCP, 443);
-	stop_restart_timeout();
+	stop_restart_timeout(); 	// stop clocking connectin timeout
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
 		return;
@@ -313,18 +330,18 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 	printf("incoming buffer: %s\n", buff);
 
 	char snd[] =
-			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"https_response\"}";
-
+			"HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n"
+			"{\"test_key\":\"https_response\"}";
 
 	if (strlen(buff) > 0) {
 		state_success = evaluate_http(&device, buff, in_head, in_body, snd);
 	}
 
-	printf("send: %s\n", snd);
-
-	// FUT
-	// if proper keyword found, send dev info
-	// else send something stupid
+	/*
+	 * FUT
+	 *  if proper keyword found, send dev info
+	 * else send neutral answer
+	 */
 	if ((rc = net_Send(ctx, snd, strlen(snd), 2000)) < 0) {
 		printf("ERROR: could not send response: %d\r\n", rc);
 		return 0;
@@ -341,7 +358,8 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 void UDP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
 	set_restart_timeout(5000);
-	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900); // 1900 port for ssdp disocvery
+	// 1900 port for ssdp disocvery
+	int rc = net_StartServerConnection(&netContext, SOCKET_UDP, 1900);
 	stop_restart_timeout();
 	if (rc != 0) {
 		printf("ERROR: net_TLSStartServerConnection: %d\r\n", rc);
@@ -356,12 +374,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t 
 				MqttClient_ReturnCodeToString(rc));
 		return;
 	}
-	if ((rc = GGL_MQTT_Publish("events/report", "{\"state\": \"off\"}"))
-			!= RC_SUCCESS) {
-		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
-				MqttClient_ReturnCodeToString(rc));
-		return;
-	}
+
 	if ((rc = GGL_MQTT_Subscribe("config", MQTT_QOS_1)) != RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Subscribe FAILED %d - %s\r\n", rc,
 				MqttClient_ReturnCodeToString(rc));
@@ -381,6 +394,9 @@ static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t 
 	GGL_MQTT_Disconnect();
 }
 
+/*
+ * used for testing mqtt mechnich
+
 static void SimpleMQTT_Example(device_config_t *device) {
 	int rc = MqttClient_NetConnect(&mqttClient, "iot.eclipse.org", 1883, 2000,
 			0, NULL);
@@ -389,7 +405,6 @@ static void SimpleMQTT_Example(device_config_t *device) {
 		return;
 	}
 
-	printf("after mqqt client netconnect\n");
 	MqttConnect connect;
 	connect.client_id = "733e030f798749a2815aba56dfe9e973";
 	connect.clean_session = 1;
@@ -435,7 +450,7 @@ static void SimpleMQTT_Example(device_config_t *device) {
 		MqttClient_Ping(&mqttClient);
 	}
 }
-
+*/
 
 static void WIFI_GoOnline(void) {
 	uint8_t online = 0;
@@ -520,6 +535,8 @@ static void SW_STACK_Init() {
 	device.region = "europe-west1";
 
 	GGL_NetworkDef network;
+	network.mqttPrivateKey = (char*) PRIVATE_KEY;
+	network.mqttPrivateKeySize = PRIVATE_KEY_SIZE;
 	network.mqttHost = "mqtt.googleapis.com";
 	network.mqttPort = 8883;
 
