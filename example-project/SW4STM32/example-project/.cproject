@@ -50,6 +50,8 @@
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/MQTT/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/GoogleIOT/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/LOG/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/HTTPClient/Inc"/>
+									<listOptionValue builtIn="false" value="../../../../../../Middlewares/Third_Party/SmarthomeCommon/JSONUtils/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../common/WiFi/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../common/Heartbeat/Inc"/>
 									<listOptionValue builtIn="false" value="../../../../common/Device_Info/Inc"/>

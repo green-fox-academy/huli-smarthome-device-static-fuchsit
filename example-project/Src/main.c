@@ -60,6 +60,7 @@ m * @file    Templates/Src/main.c
 #include "heartbeat.h"
 #include "http_hanlder.h"
 #include "rgb_led_color.h"
+#include "net_settings.h"
 
 #define NEED_WIFI		1
 
@@ -501,12 +502,15 @@ static void SW_STACK_Init() {
 	device.region = "europe-west1";
 
 	GGL_NetworkDef network;
+	network.mqttPrivateKey = (char*) PRIVATE_KEY;
+	network.mqttPrivateKeySize = PRIVATE_KEY_SIZE;
 	network.mqttHost = "mqtt.googleapis.com";
 	network.mqttPort = 8883;
 
 	gglConfig.callback = MQTT_HandleMessageCallback;
 	gglConfig.device = device;
 	gglConfig.network = network;
+
 	GGL_IOT_Init(&gglConfig);
 
 	NTPClient_Init("hu.pool.ntp.org", 123);
