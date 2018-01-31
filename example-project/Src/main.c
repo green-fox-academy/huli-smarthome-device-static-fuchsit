@@ -507,6 +507,10 @@ static void SW_STACK_Init() {
 	gglConfig.callback = MQTT_HandleMessageCallback;
 	gglConfig.device = device;
 	gglConfig.network = network;
+	network.mqttPrivateKey = (char*) PRIVATE_KEY;
+	network.mqttPrivateKeySize = PRIVATE_KEY_SIZE;
+	network.mqttHost = "mqtt.googleapis.com";
+	network.mqttPort = 8883;
 	GGL_IOT_Init(&gglConfig);
 
 	NTPClient_Init("hu.pool.ntp.org", 123);
