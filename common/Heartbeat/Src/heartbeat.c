@@ -12,8 +12,9 @@
  * FUT
  * add operation continuity control to GGL mode too
  */
-
+#include "main.h"
 #include "heartbeat.h"
+#include "aircondi.h"
 
 volatile int restart_enabled = FALSE;
 volatile int restart_needed = FALSE;
@@ -116,9 +117,15 @@ void restart_procedure() {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (restart_due_to_timeout_needed())
+/*	if (restart_due_to_timeout_needed())
 		restart_procedure();
 
-	//printf("callback called\n");
+	//printf("callback called\n");*/
+	temp_set(user_min, user_max);
+
+	/*printf("Actual Temp: %d\n", temp);
+	printf("User min: %d\n", user_min);
+	printf("User max: %d\n", user_max);
+	printf("Pwm: %d\n", TIM2 -> CCR3);*/
 }
 /* **************************************** */

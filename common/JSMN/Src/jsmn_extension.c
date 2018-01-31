@@ -65,7 +65,19 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 					JSON_STRING + t[i+1].start);
 			conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-		} else {
+		} else if (jsoneq(JSON_STRING, &t[i], "Temperature") == 0) {
+			 //We may additionally check if the value is either "true" or "false"
+			printf("- Temperature range: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			conf_struct->temperature = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+			i++;
+		} /* else if (jsoneq(JSON_STRING, &t[i], "User_Max") == 0) {
+			 //We may additionally check if the value is either "true" or "false"
+			printf("- User_Max: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			conf_struct->user_max = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+			i++;
+		}*/  else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					JSON_STRING + t[i].start);
 		}

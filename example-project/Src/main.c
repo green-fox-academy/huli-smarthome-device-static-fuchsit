@@ -61,6 +61,7 @@ m * @file    Templates/Src/main.c
 #include "heartbeat.h"
 #include "http_hanlder.h"
 #include "rgb_led_color.h"
+#include "aircondi.h"
 
 #define NEED_WIFI		1
 
@@ -144,6 +145,7 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx);
  * functions for handlingg ggl connection
  */
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
+void report_status_color ();
 static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
 
 /*
@@ -214,48 +216,57 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	// parse and evaluate incoming incoming config command from ggl cloud
 	parse_JSON(&device, message);
 
-
 	if (strstr(device.device_name, "LED_CONTROLLER")) {
 		device.device_type = LED_CONTROLLER;
 	} else if (strstr(device.device_name, "COFFEE_MAKER")) {
 		device.device_type = COFFEE_MAKER;
 	} else if (strstr(device.device_name, "SMART_LIGTH")) {
 		device.device_type = SMART_LIGTH;
-	} else if (strstr(device.device_name, "WEATHER_STATION")) {
-		device.device_type = WEATHER_STATION;
+	} else if (strstr(device.device_name, "AIR_CONDITIONER")) {
+		device.device_type = AIR_CONDITIONER;
 	}
 
 	switch (device.device_type) {
-		case LED_CONTROLLER:
-			Project_Led_Lights (device.color);
-			break;
-		case COFFEE_MAKER:
-			//call COFFEE_MAKER;
-			break;
-		case SMART_LIGTH:
-			//call SMART_LIGTH;
-			break;
-		case WEATHER_STATION:
-			//call WEATHER_STATION;
-			break;
-	}
-
-	/*
-	 * FUT
-	 * add a function which prepares the proper state message report
-	 */
-
-	int rc = 0;
-
-	// publish back to state topic
-	if ((rc = GGL_MQTT_Publish("state", "{\"state\": \"state_report\"}"))
-		!= RC_SUCCESS) {
-		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
-				MqttClient_ReturnCodeToString(rc));
-		return rc;
-	}
+    case LED_CONTROLLER:
+      Project_Led_Lights (device.color);
+      report_status_color ();
+      break;
+    case COFFEE_MAKER:
+      //call COFFEE_MAKER;
+      break;
+    case SMART_LIGTH:
+      //call SMART_LIGTH;
+      break;
+    case AIR_CONDITIONER:
+      Project_Airconditioner (device.temperature);
+      break;
+    }
 
 	return 0;
+}
+
+void report_status_color () {
+
+	int rc;
+	char buffer[50];
+	sprintf (buffer, "{\"state\": \"%s\" }", device.color);
+	if ((rc = GGL_MQTT_Publish("state", buffer))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+	}
+}
+
+void report_fan_state () {
+
+	int rc;
+	char buffer[50];
+	sprintf (buffer, "{\"Temperature state\": \"%d\" }", temp);
+	if ((rc = GGL_MQTT_Publish("state", buffer))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+	}
 }
 
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
