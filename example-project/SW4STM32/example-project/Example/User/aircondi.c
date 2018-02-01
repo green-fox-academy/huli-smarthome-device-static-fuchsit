@@ -5,27 +5,33 @@
  *  Created on: Jan 25, 2018
  *      Author: Ádám
  */
-#include "aircondi.h"
+
 #include "main.h"
+#include "aircondi.h"
 
-int fan_flag = 0;
+int is_fan_working = FALSE;
+int air_temperature = 0;
 
-void temp_set(int user_min, int user_max) {
-	get_temperatura();
-	if (temp > user_max) {
-		TIM2 -> CCR3 = 100;
-		if (fan_flag == 0) {
-			printf("state: %d;\n", fan_flag);
-			//report_fan_state ();
-			fan_flag = 1;
+void temp_range_set_and_fan_controll(int user_min, int user_max) {
+
+	get_temperatura();  // updates temp
+
+	if (air_temperature >= user_max){
+		if (is_fan_working == FALSE) {
+			TIM2 -> CCR3 = 99; // turn on fan
+			printf("set flag state to %d\n", is_fan_working);
+			should_GGL_publish = TRUE;
+			//update_message_buffer(&message_buffer);
 		}
-	} else if (temp < user_min) {
-		TIM2 -> CCR3 = 0;
-		if (fan_flag == 1) {
-			printf("state: %d;\n", fan_flag);
-			//report_fan_state ();
-			fan_flag = 0;
+		is_fan_working = TRUE;
+	} else if (air_temperature <= user_max) {
+		if (is_fan_working) {
+			TIM2 -> CCR3 = 0;
+			printf("set flag state to %d\n", is_fan_working);
+			should_GGL_publish = TRUE;
+			//update_message_buffer(&message_buffer);
 		}
+		is_fan_working = FALSE;
 	}
 }
 
@@ -70,7 +76,7 @@ void get_temperatura() {
 
 	//trigger temperature measurements
 	HAL_I2C_Master_Transmit(&I2cHandle , 0b1001000<<1, &reg , 1 , 100);
-	HAL_I2C_Master_Receive(&I2cHandle , 0b1001000<<1, &temp , 1 , 100);
+	HAL_I2C_Master_Receive(&I2cHandle , 0b1001000<<1, &air_temperature , 1 , 100);
 
 }
 
