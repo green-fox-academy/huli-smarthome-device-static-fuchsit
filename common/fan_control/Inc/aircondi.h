@@ -21,13 +21,15 @@ I2C_HandleTypeDef I2cHandle;
 TIM_OC_InitTypeDef TimerOCConfig;
 
 int reg;
-int temp;
+int air_temperature;
 int user_max;
 int user_min;
+int should_GGL_publish;
 
 
 void get_temperatura();
 void temp_set(int user_min, int user_max);
+void temp_range_set_and_fan_controll(int user_min, int user_max);
 void Fan_Init(void);
 void temp_sensor_init(void);
 void timer_pwm_config();

@@ -21,6 +21,7 @@ volatile int restart_needed = FALSE;
 volatile uint32_t process_start;
 volatile uint32_t restart_timeout_deadlie;
 TIM_HandleTypeDef TIM4Handle;
+extern should_check_temp; // prevents checking air_temperature before seting up operation
 
 void set_restart_timeout(uint32_t timeout) {
 	restart_enabled = TRUE;
@@ -43,17 +44,8 @@ void stop_restart_timeout() {
 	restart_enabled = FALSE;
 }
 
-/* restart handler TIM handle declaration */
 TIM_HandleTypeDef TIM4Handle;
 
-/**
-  * @brief TIM MSP Initialization
-  *        This function configures the hardware resources used in this example:
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration
-  * @param htim: TIM handle pointer
-  * @retval None
-  */
 void TIM4_Init(TIM_HandleTypeDef *htim)
 {
 
@@ -69,8 +61,8 @@ void TIM4_Init(TIM_HandleTypeDef *htim)
 	      + ClockDivision = 0
 	      + Counter direction = Up
 	 */
-	TIM4Handle.Init.Period            = 10000 - 1;
-	TIM4Handle.Init.Prescaler         = 8000 - 1; // FUT to be calculated
+	TIM4Handle.Init.Period            = 100 - 1;
+	TIM4Handle.Init.Prescaler         = 1000 - 1; // FUT to be calculated
 	TIM4Handle.Init.ClockDivision     = 0;
 	TIM4Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;
 	TIM4Handle.Init.RepetitionCounter = 0;
@@ -116,16 +108,29 @@ void restart_procedure() {
 	//printf("restart procedure called\n");
 }
 
+void stop_callback_timer() {
+
+	if (HAL_TIM_Base_Stop_IT(&TIM4Handle) != HAL_OK) {
+	   /* Starting Error */
+	   //Error_Handler();
+	 }
+}
+
+void start_callback_timer() {
+
+	if (HAL_TIM_Base_Start_IT(&TIM4Handle) != HAL_OK) {
+	   /* Starting Error */
+	   //Error_Handler();
+	 }
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 /*	if (restart_due_to_timeout_needed())
-		restart_procedure();
+ *	restart_procedure();
+ */
 
-	//printf("callback called\n");*/
-	temp_set(user_min, user_max);
+	if (should_check_temp)
+		temp_range_set_and_fan_controll(user_min, user_max);
 
-	/*printf("Actual Temp: %d\n", temp);
-	printf("User min: %d\n", user_min);
-	printf("User max: %d\n", user_max);
-	printf("Pwm: %d\n", TIM2 -> CCR3);*/
 }
 /* **************************************** */

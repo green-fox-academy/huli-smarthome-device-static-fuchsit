@@ -23,10 +23,6 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
     first = strchr(in_buffer, '{');
     last = strrchr(in_buffer, '}');
 
-/*
- * FUT
- * handle if there is no {} in the http
- */
     printf("first: %s\n", first);
     printf("last: %s\n", last);
 
@@ -37,7 +33,7 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
 		printf("first_pos: %d\n", first_pos);
 		printf("last_pos: %d\n", last_pos);
 
-		if (first_pos != 0) { // if there is only JSON body - ie in GGL state
+		if (first_pos != 0) { // if there is only JSON body - ie in HTTPS state
 			strncpy(in_head, in_buffer, first_pos);
 			printf("in sprt head and body 1\n");
 			in_head[first_pos] = '\0';
@@ -60,10 +56,10 @@ int prepare_http_response(device_config_t *device, HTTP_Response_Eval response_c
 {
     switch (response_code) {
         case SSDP_FUCHSIT_ANSWER:
-            strcpy(snd, "HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"fuchsit_request\"}");
+            strcpy(snd, "HTTP/1.0 200 OK\r\nContent-Type: \"application/json\"\r\n\r\n");
             break;
          case SSDP_NON_FUCHSIT_ANSWER:
-             strcpy(snd, "HTTP/1.0 400 OK\r\nContent-Type: \"application/json\"\r\n\r\n{\"test_key\":\"non_fuchsit_request\"}");
+             strcpy(snd, "HTTP/1.0 400 OK\r\nContent-Type: \"application/json\"\r\n\r\n");
             break;
          case HTTPS_SEND_DEVICE_PARAMS:
              strcpy(snd, "invalid request\n");

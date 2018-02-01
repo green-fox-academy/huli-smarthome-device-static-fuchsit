@@ -99,6 +99,9 @@ extern TIM_HandleTypeDef TIM4Handle;
 uint8_t MAC_Addr[6];
 uint8_t IP_Addr[4];
 
+int should_GGL_publish = FALSE;
+int should_check_temp = FALSE;
+
 /*
  * fot testing
 extern MqttClient mqttClient;
@@ -142,11 +145,16 @@ void HTTPS_ServerStart(device_config_t *device);
 int HandleClientCallback_HTTPS(NetTransportContext *ctx);
 
 /*
- * functions for handlingg ggl connection
+ * functions for handling ggl connection
  */
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
-void report_status_color ();
 static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
+/*
+ * publishing back device specific information back to ggl core's
+ * state topic
+ */
+void report_status_color ();
+void report_fan_state_and_temperature ();
 
 /*
  * developed to test mqtt connections
@@ -208,7 +216,6 @@ int main(void)
 	}
 
 }
-// end of main()
 
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
@@ -257,11 +264,11 @@ void report_status_color () {
 	}
 }
 
-void report_fan_state () {
+void report_fan_state_and_temperature () {
 
 	int rc;
 	char buffer[50];
-	sprintf (buffer, "{\"Temperature state\": \"%d\" }", temp);
+	sprintf (buffer, "{\"Temperature state\": \"%d\" }", air_temperature);
 	if ((rc = GGL_MQTT_Publish("state", buffer))
 			!= RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
@@ -354,7 +361,6 @@ int HandleClientCallback_SSDP(NetTransportContext *ctx) {
 	}
 }
 
-
 void UDP_SSDP_ServerStart(device_config_t *device) {
 	net_SetHandleClientConnectionCallback(HandleClientCallback_SSDP);
 	set_restart_timeout(5000);
@@ -380,15 +386,28 @@ static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t 
 				MqttClient_ReturnCodeToString(rc));
 		return;
 	}
+	should_check_temp = TRUE;
+
 	while (1) {
+
+		// disable report callback timer to prevent overwriting message buffer
+		stop_callback_timer();
+		if (should_GGL_publish) {
+			report_fan_state_and_temperature();
+			should_GGL_publish = FALSE;
+		}
+		start_callback_timer();
+
 		if ((rc = GGL_MQTT_WaitForMessage(10000)) != RC_SUCCESS) {
 			printf("ERROR: GGL_MQTT_WaitForMessage FAILED %d - %s\r\n", rc,
 					MqttClient_ReturnCodeToString(rc));
 		}
+
 		if ((rc = GGL_MQTT_Ping()) != RC_SUCCESS) {
 			printf("ERROR: GGL_MQTT_Ping FAILED %d - %s\r\n", rc,
 					MqttClient_ReturnCodeToString(rc));
 		}
+
 	}
 
 	GGL_MQTT_Disconnect();
@@ -529,7 +548,7 @@ static void SW_STACK_Init() {
 
 	// initialize google stack
 	GGL_DeviceDef device;
-	device.deviceId = "test-iot-device-2";
+	device.deviceId = "test-iot-device";
 	device.deviceRegistry = "greenfox-device-registry";
 	device.projectId = "static-aventurin-fuchsit";
 	device.region = "europe-west1";
