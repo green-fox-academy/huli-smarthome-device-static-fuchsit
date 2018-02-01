@@ -341,16 +341,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/syscalls.c</locationURI>
 		</link>
 		<link>
-			<name>Example/User/jsmn.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn.c</locationURI>
-		</link>
-		<link>
-			<name>Example/User/jsmn_extension.c</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn_extension.c</locationURI>
-		</link>
-		<link>
 			<name>Example/User/main.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Src/main.c</locationURI>
@@ -384,6 +374,16 @@
 			<name>Libraries/Heartbeat/heartbeat.c</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/common/Heartbeat/Src/heartbeat.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/JSMN/jsmn.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/JSMN/jsmn_extension.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/JSMN/Src/jsmn_extension.c</locationURI>
 		</link>
 		<link>
 			<name>Libraries/JSONUtils/json_utils.c</name>
@@ -499,6 +499,16 @@
 			<name>Libraries/WolfSSL/wolfio.c</name>
 			<type>1</type>
 			<locationURI>PARENT-5-PROJECT_LOC/Middlewares/Third_Party/wolfssl-3.13.0/src/wolfio.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/fan_control/aircondi.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/fan_control/Src/aircondi.c</locationURI>
+		</link>
+		<link>
+			<name>Libraries/rgb_led_control/rgb_led_color.c</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/common/rgb_led_color/Src/rgb_led_color.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/BSP/example-project/stm32l475e_iot01.c</name>

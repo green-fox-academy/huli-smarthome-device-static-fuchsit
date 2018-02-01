@@ -23,28 +23,20 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
     first = strchr(in_buffer, '{');
     last = strrchr(in_buffer, '}');
 
-    printf("first: %s\n", first);
-    printf("last: %s\n", last);
-
     if (first != last) { // there is a JSON body
 		size_t first_pos =  first - &in_buffer[0];
 		size_t last_pos =  last - &in_buffer[0];
 
-		printf("first_pos: %d\n", first_pos);
-		printf("last_pos: %d\n", last_pos);
-
-		if (first_pos != 0) { // if there is only JSON body - ie in HTTPS state
+		// there is a header and a JSON body- ie in HTTPS state
+		if (first_pos != 0) {
 			strncpy(in_head, in_buffer, first_pos);
-			printf("in sprt head and body 1\n");
-			in_head[first_pos] = '\0';
 
-			printf("in sprt head and body 2\n");
+			in_head[first_pos] = '\0';
 		}
 
 		strncpy(in_body, first, last_pos - first_pos + 1);
 		in_body[last_pos - first_pos + 1] = '\0';
 
-		printf("in sprt head and body 3\n");
     } else {			// there is NO JSON body - ie in SSDP state
     	strcpy(in_head, in_buffer);
     }
