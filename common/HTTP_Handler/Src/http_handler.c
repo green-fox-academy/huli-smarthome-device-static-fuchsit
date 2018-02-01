@@ -37,7 +37,7 @@ int separate_http_head_body(char in_buffer[], char in_head[], char in_body[])
 		strncpy(in_body, first, last_pos - first_pos + 1);
 		in_body[last_pos - first_pos + 1] = '\0';
 
-    } else {			// there is NO JSON body - ie in SSDP state
+    } else {  // there is NO JSON body - ie in SSDP state
     	strcpy(in_head, in_buffer);
     }
 
@@ -94,7 +94,7 @@ int evaluate_http(device_config_t *device, char in_buffer[], char in_head[], cha
             } else if (strstr(in_head, "setDeviceParams")){
                 int dev_pars_configed = set_device_params(device, in_body);
                 if (dev_pars_configed) {
-                	// connect to mqtt - válasz, h ok
+                	// connect to mqtt - send answer that we could connect
                     prepare_http_response(device, HTTPS_SUCCESSFUL_DEVICE_CONFIG, snd);
                     state_success = 1;
                 }
