@@ -11,27 +11,44 @@
 
 int is_fan_working = FALSE;
 int air_temperature = 0;
+int fan_state = FAN_OFF;
 
 void temp_range_set_and_fan_controll(int user_min, int user_max) {
 
 	get_temperatura();  // updates temp
 
-	if (air_temperature >= user_max){
-		if (is_fan_working == FALSE) {
-			TIM2 -> CCR3 = 99; // turn on fan
-			printf("set flag state to %d\n", is_fan_working);
-			should_GGL_publish = TRUE;
-			//update_message_buffer(&message_buffer);
-		}
-		is_fan_working = TRUE;
-	} else if (air_temperature <= user_max) {
-		if (is_fan_working) {
+	switch(fan_state) {
+		case FAN_OFF :
 			TIM2 -> CCR3 = 0;
-			printf("set flag state to %d\n", is_fan_working);
 			should_GGL_publish = TRUE;
 			//update_message_buffer(&message_buffer);
-		}
-		is_fan_working = FALSE;
+			break;
+
+		case FAN_ON :
+			TIM2 -> CCR3 = 99;
+			should_GGL_publish = TRUE;
+			//update_message_buffer(&message_buffer);
+			break;
+
+		case THERMOSTAT :
+			if (air_temperature >= user_max + 1) {
+				if (is_fan_working == FALSE) {
+					TIM2 -> CCR3 = 99; // turn on fan
+					printf("set flag state to %d\n", is_fan_working);
+					should_GGL_publish = TRUE;
+					//update_message_buffer(&message_buffer);
+				}
+				is_fan_working = TRUE;
+			} else if (air_temperature <= user_max - 1) {
+				if (is_fan_working) {
+					TIM2 -> CCR3 = 0;
+					printf("set flag state to %d\n", is_fan_working);
+					should_GGL_publish = TRUE;
+					//update_message_buffer(&message_buffer);
+				}
+				is_fan_working = FALSE;
+			}
+			break;
 	}
 }
 
@@ -101,10 +118,10 @@ void timer_pwm_config() {
 
 void airconditioner_temperature_range_parsing(char temperature_range[]){
 
-    char *text_one;
+   /* char *text_one;
     char *text_two;
 
-    const char ch[2] = "-";
+    const char ch[2] = " ";
     char *token;
     token = strtok(temperature_range, ch);
     text_one = token;
@@ -115,14 +132,18 @@ void airconditioner_temperature_range_parsing(char temperature_range[]){
     }
     user_min = strtol(text_two , NULL , 10);
     user_max = strtol(text_one , NULL , 10);
-    int temp_buff = 0;
-    if(user_min > user_max){
-    	temp_buff = user_max;
-        user_max = user_min;
-        user_min = temp_buff;
-    } else {
-        printf("Bazsi Szeretlek\n");
+    int temp_buff = 0;*/
+
+    if (strcmp(temperature_range, "on") == 1) {
+    	fan_state = FAN_ON;
     }
+    else if (strcmp(temperature_range, "off") == 1) {
+    	fan_state = FAN_OFF;
+    }
+    else {
+    	user_max = strtol(temperature_range , NULL , 10);
+    }
+        int temp_buff = 0;
 
 }
 
