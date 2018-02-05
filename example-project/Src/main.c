@@ -35,6 +35,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <inttypes.h>
 
 
 
@@ -56,14 +57,14 @@ static FLASH_EraseInitTypeDef EraseInitStruct;
 
 /* Table used for fast programming */
 static const uint64_t Data64_To_Prog[FLASH_ROW_SIZE] = {
-  0x0000000000000000, 0x1111111111111111, 0x2222222222222222, 0x3333333333333333,
+  0x0000000000000061, 0x1111111111111111, 0x2222222222222222, 0x3333333333333333,
   0x4444444444444444, 0x5555555555555555, 0x6666666666666666, 0x7777777777777777,
   0x8888888888888888, 0x9999999999999999, 0xAAAAAAAAAAAAAAAA, 0xBBBBBBBBBBBBBBBB,
   0xCCCCCCCCCCCCCCCC, 0xDDDDDDDDDDDDDDDD, 0xEEEEEEEEEEEEEEEE, 0xFFFFFFFFFFFFFFFF,
   0x0011001100110011, 0x2233223322332233, 0x4455445544554455, 0x6677667766776677,
   0x8899889988998899, 0xAABBAABBAABBAABB, 0xCCDDCCDDCCDDCCDD, 0xEEFFEEFFEEFFEEFF,
   0x2200220022002200, 0x3311331133113311, 0x6644664466446644, 0x7755775577557755,
-  0xAA88AA88AA88AA88, 0xBB99BB99BB99BB99, 0xEECCEECCEECCEECC, 0xFFDDFFDDFFDDFFDD};
+  0xAA88AA88AA88AA88, 0xBB99BB99BB99BB99, 0xEECCEECCEECCEECC, 0x0000000000000061};
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -87,6 +88,29 @@ void SystemClock_Config(void);
 /* Private functions ---------------------------------------------------------*/
 static void Peripherals_Init(void);
 static void UART_Init(void);
+
+/*
+ * returns uint64_t as hex in string format for embedded systems
+ * https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c
+ */
+char* ullx(uint64_t val)
+{
+    static char buf[34] = { [0 ... 33] = 0 };
+    char* out = &buf[33];
+    uint64_t hval = val;
+    unsigned int hbase = 16;
+
+    do {
+        *out = "0123456789abcdef"[hval % hbase];
+        --out;
+        hval /= hbase;
+    } while(hval);
+
+    *out-- = 'x', *out = '0';
+
+    return out;
+}
+
 
 /**
  * @brief  Main program
@@ -136,11 +160,14 @@ int main(void) {
 
 	Address = FLASH_USER_START_ADDR;
 
+	int i = 0;
 	while (Address < (FLASH_USER_END_ADDR - (FLASH_ROW_SIZE*sizeof(uint64_t))))
 	{
+
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FAST, Address, (uint64_t)src_addr) == HAL_OK)
 		{
 			Address = Address + (FLASH_ROW_SIZE*sizeof(uint64_t));
+			printf("i wrote %d times\n", i++);
 		}
 		else
 		{
@@ -203,6 +230,27 @@ int main(void) {
 	}
 
 	/* Infinite loop */
+
+	HAL_FLASH_Unlock();
+
+
+	uint64_t *p_address = FLASH_USER_START_ADDR;
+
+	//printf("value at address: %x\n", *(p_address + 1));
+
+	printf("%" PRIx64 "\n", *(p_address));
+
+	printf("p address value = %jd (0x%jx)\n", *(p_address + 1), *(p_address + 1));
+
+	for (int i = 0; i < 32; ++i) {
+		printf("p address val with string at %d: %s\n", i,  ullx(*(p_address + i)));
+	}
+
+	printf("char at 0: %c\n", (int)*(p_address));
+	printf("char at 31: %c\n", (int)*(p_address + 31));
+
+	HAL_FLASH_Lock();
+
 	while (1){}
 
 }
