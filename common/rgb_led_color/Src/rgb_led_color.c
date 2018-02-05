@@ -1,7 +1,7 @@
 #include "rgb_led_color.h"
 
+
 void Project_Led_Lights (char *color) {
-	RGB_Init();
 	json_hexa_for_rgbled(color);
 	LED_ON (red, blue, green);
 }

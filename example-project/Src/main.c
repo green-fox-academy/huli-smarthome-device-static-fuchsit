@@ -102,6 +102,7 @@ uint8_t IP_Addr[4];
 int should_GGL_publish = FALSE;
 int should_check_temp = FALSE;
 
+
 /*
  * fot testing
 extern MqttClient mqttClient;
@@ -149,12 +150,6 @@ int HandleClientCallback_HTTPS(NetTransportContext *ctx);
  */
 int MQTT_HandleMessageCallback(const char* topic, const char* message);
 static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t *device);
-/*
- * publishing back device specific information back to ggl core's
- * state topic
- */
-void report_status_color ();
-void report_fan_state_and_temperature ();
 
 /*
  * developed to test mqtt connections
@@ -220,61 +215,16 @@ int main(void)
 int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 	printf("Message arrived in topic: %s\r\nMessage:%s\r\n", topic, message);
 
-	// parse and evaluate incoming incoming config command from ggl cloud
+	// parse and evaluate incoming config command from ggl cloud
 	parse_JSON(&device, message);
 
-	if (strstr(device.device_name, "LED_CONTROLLER")) {
-		device.device_type = LED_CONTROLLER;
-	} else if (strstr(device.device_name, "COFFEE_MAKER")) {
-		device.device_type = COFFEE_MAKER;
-	} else if (strstr(device.device_name, "SMART_LIGTH")) {
-		device.device_type = SMART_LIGTH;
-	} else if (strstr(device.device_name, "AIR_CONDITIONER")) {
-		device.device_type = AIR_CONDITIONER;
-	}
-
-	switch (device.device_type) {
-    case LED_CONTROLLER:
-      Project_Led_Lights (device.color);
-      report_status_color ();
-      break;
-    case COFFEE_MAKER:
-      //call COFFEE_MAKER;
-      break;
-    case SMART_LIGTH:
-      //call SMART_LIGTH;
-      break;
-    case AIR_CONDITIONER:
-      Project_Airconditioner (device.temperature);
-      break;
-    }
+	//controls the main function, state updating, reporting
+	main_control();
 
 	return 0;
 }
 
-void report_status_color () {
 
-	int rc;
-	char buffer[50];
-	sprintf (buffer, "{\"state\": \"%s\" }", device.color);
-	if ((rc = GGL_MQTT_Publish("state", buffer))
-			!= RC_SUCCESS) {
-		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
-				MqttClient_ReturnCodeToString(rc));
-	}
-}
-
-void report_fan_state_and_temperature () {
-
-	int rc;
-	char buffer[50];
-	sprintf (buffer, "{\"Temperature state\": \"%d\" }", air_temperature);
-	if ((rc = GGL_MQTT_Publish("state", buffer))
-			!= RC_SUCCESS) {
-		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
-				MqttClient_ReturnCodeToString(rc));
-	}
-}
 
 int HandleClientCallback_HTTPS(NetTransportContext *ctx) {
 	char buff[512];
@@ -391,12 +341,14 @@ static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t 
 	while (1) {
 
 		// disable report callback timer to prevent overwriting message buffer
-		stop_callback_timer();
+
 		if (should_GGL_publish) {
+			stop_callback_timer();
 			report_fan_state_and_temperature();
 			should_GGL_publish = FALSE;
+			start_callback_timer();
 		}
-		start_callback_timer();
+
 
 		if ((rc = GGL_MQTT_WaitForMessage(10000)) != RC_SUCCESS) {
 			printf("ERROR: GGL_MQTT_WaitForMessage FAILED %d - %s\r\n", rc,
