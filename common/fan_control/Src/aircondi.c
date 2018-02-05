@@ -126,10 +126,13 @@ void airconditioner_temperature_range_parsing(char temperature_range[]){
 
 }
 
-void Project_Airconditioner (char *Temperature) {
+void Aircondi_init () {
 	timer_pwm_config();
 	Fan_Init();
 	temp_sensor_init();
+}
+
+void Project_Airconditioner (char *Temperature) {
 	airconditioner_temperature_range_parsing(Temperature);
 }
 

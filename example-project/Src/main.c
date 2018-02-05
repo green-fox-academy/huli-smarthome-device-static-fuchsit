@@ -101,6 +101,8 @@ uint8_t IP_Addr[4];
 
 int should_GGL_publish = FALSE;
 int should_check_temp = FALSE;
+int RGB_init_flag = 0;
+int Aircondi_init_flag = 0;
 
 /*
  * fot testing
@@ -233,20 +235,28 @@ int MQTT_HandleMessageCallback(const char* topic, const char* message) {
 		device.device_type = AIR_CONDITIONER;
 	}
 
-	switch (device.device_type) {
+	switch (device.device_type) { //old was (device.device_type)
     case LED_CONTROLLER:
-      Project_Led_Lights (device.color);
-      report_status_color ();
-      break;
+    	if (!RGB_init_flag) {
+    		RGB_Init();
+    		RGB_init_flag = 1;
+    	}
+    	Project_Led_Lights (device.color);
+    	report_status_color ();
+    	break;
     case COFFEE_MAKER:
-      //call COFFEE_MAKER;
-      break;
+    	//call COFFEE_MAKER;
+    	break;
     case SMART_LIGTH:
-      //call SMART_LIGTH;
-      break;
+    	//call SMART_LIGTH;
+    	break;
     case AIR_CONDITIONER:
-      Project_Airconditioner (device.temperature);
-      break;
+    	if (!Aircondi_init_flag) {
+    		Aircondi_init();
+    	    Aircondi_init_flag = 1;
+    	}
+    	Project_Airconditioner (device.temperature);
+    	break;
     }
 
 	return 0;

@@ -59,13 +59,13 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 					JSON_STRING + t[i+1].start);
 			conf_struct->device_name = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "Color") == 0) {
+		} else if (device.device_name == "LED_CONTROLLER" && jsoneq(JSON_STRING, &t[i], "Color") == 0) {
 			 //We may additionally check if the value is either "true" or "false"
 			printf("- Color: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
 			conf_struct->color = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
-		} else if (jsoneq(JSON_STRING, &t[i], "Temperature") == 0) {
+		} else if (device.device_name == "AIR_CONDITIONER" && jsoneq(JSON_STRING, &t[i], "Temperature") == 0) {
 			 //We may additionally check if the value is either "true" or "false"
 			printf("- Temperature range: %.*s\n", t[i+1].end-t[i+1].start,
 					JSON_STRING + t[i+1].start);
