@@ -12,6 +12,9 @@
 
 #ifndef EXAMPLE_USER_AIRCONDI_H_
 #define EXAMPLE_USER_AIRCONDI_H_
+#define FAN_OFF			0
+#define FAN_ON 			1
+#define THERMOSTAT  	2
 
 /* Private typedef -----------------------------------------------------------*/
 GPIO_InitTypeDef PWM_FAN;
@@ -20,12 +23,12 @@ TIM_HandleTypeDef TimHandle;
 I2C_HandleTypeDef I2cHandle;
 TIM_OC_InitTypeDef TimerOCConfig;
 
+int state;
 int reg;
 int air_temperature;
 int user_max;
 int user_min;
 int should_GGL_publish;
-
 
 void get_temperatura();
 void temp_set(int user_min, int user_max);
@@ -33,7 +36,6 @@ void temp_range_set_and_fan_controll(int user_min, int user_max);
 void Fan_Init(void);
 void temp_sensor_init(void);
 void timer_pwm_config();
-void Aircondi_init ();
 
 void airconditioner_temperature_range_parsing(char temperature_range[]);
 void Project_Airconditioner (char *Temperature);
