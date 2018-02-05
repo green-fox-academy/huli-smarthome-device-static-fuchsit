@@ -41,7 +41,7 @@ if (strstr(device.device_name, "LED_CONTROLLER")) {
     case AIR_CONDITIONER:
     	if (Aircondi_init_flag == 0) {
     		Aircondi_init();
-    	    Aircondi_init_flag = 1;
+    		Aircondi_init_flag = 1;
     	}
     	Project_Airconditioner (device.temperature);
     	break;
