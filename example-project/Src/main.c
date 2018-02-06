@@ -62,6 +62,7 @@ m * @file    Templates/Src/main.c
 #include "http_hanlder.h"
 #include "rgb_led_color.h"
 #include "aircondi.h"
+#include "main_control.h"
 
 #define NEED_WIFI		1
 
@@ -164,17 +165,18 @@ static void SimpleMQTT_Example(device_config_t *device);
 int main(void)
 {
 	Peripherals_Init();
+/*
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
 
-	/*
+
 	 * set initial device state
-	 */
+
 	device.state_of_device = STATE_GGL_CORE;
 
-	/*
+
 	 * FUT
 	 * pseudo code for checking if device config was saved,
 	 * and proceed accordingly
@@ -190,7 +192,7 @@ int main(void)
 			device.state_of_operation = STATE_SSDP_DISCOVERY;
 		}
 	}
-	*/
+
 
 	while (1) {
 
@@ -209,6 +211,7 @@ int main(void)
 			break;
 		}
 	}
+*/
 
 }
 
@@ -545,6 +548,7 @@ static void Peripherals_Init(void) {
 	 * FUT
 	 */
 	TIM4_Init(&TIM4Handle);
+	ping_timer(&TIM_Ping_Handle);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();

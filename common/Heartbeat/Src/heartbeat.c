@@ -21,6 +21,7 @@ volatile int restart_needed = FALSE;
 volatile uint32_t process_start;
 volatile uint32_t restart_timeout_deadlie;
 TIM_HandleTypeDef TIM4Handle;
+TIM_HandleTypeDef TIM_Ping_Handle;
 extern should_check_temp; // prevents checking air_temperature before seting up operation
 
 void set_restart_timeout(uint32_t timeout) {
@@ -44,7 +45,36 @@ void stop_restart_timeout() {
 	restart_enabled = FALSE;
 }
 
-TIM_HandleTypeDef TIM4Handle;
+//TIM_HandleTypeDef TIM4Handle;
+
+void ping_timer(TIM_HandleTypeDef *htim){
+	__HAL_RCC_TIM16_CLK_ENABLE();
+
+	TIM_Ping_Handle.Instance = TIM16;
+	TIM_Ping_Handle.Init.Period            = 16000 - 1;
+	TIM_Ping_Handle.Init.Prescaler         = 10000 - 1; // FUT to be calculated
+	TIM_Ping_Handle.Init.ClockDivision     = 0;
+	TIM_Ping_Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;
+	TIM_Ping_Handle.Init.RepetitionCounter = 0;
+
+	HAL_TIM_Base_Init(&TIM_Ping_Handle);
+
+	HAL_TIM_Base_Start_IT(&TIM_Ping_Handle);
+
+	HAL_NVIC_SetPriority(TIM16_IRQn, 3, 0);
+	HAL_NVIC_EnableIRQ(TIM16_IRQn);
+
+	void TIM16_IRQHandler(void)
+	{
+	  HAL_TIM_IRQHandler(&TIM_Ping_Handle);
+	}
+
+	void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+		printf("(^) (^) (^) (^) (^)SOCKET\n");
+		BSP_LED_Toggle(LED_GREEN);
+	}
+}
+
 
 void TIM4_Init(TIM_HandleTypeDef *htim)
 {
