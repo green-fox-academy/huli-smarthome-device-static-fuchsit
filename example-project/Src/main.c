@@ -38,6 +38,19 @@
 #include <inttypes.h>
 
 
+/*
+ * http://www.st.com/content/ccc/resource/training/technical/
+ * product_training/91/e3/aa/26/e6/69/4f/de/STM32L4_Memory_Flash.pdf/
+ * files/STM32L4_Memory_Flash.pdf/jcr:content/translations/en.STM32L4_Memory_Flash.pdf
+ *
+ * 1mb flash
+ * 2x512 kbyte banks
+ * each 256 pages of 2kbyte memory/page
+ * 8 row/page -> 256 byte/row
+ *
+ * 8 row * 256 kbyte * 256 page * 2 bank = 1Mbyte flash memory
+ */
+
 
 #define FLASH_ROW_SIZE          32
 
@@ -55,16 +68,18 @@ __IO uint64_t data64 = 0;
 /*Variable used for Erase procedure*/
 static FLASH_EraseInitTypeDef EraseInitStruct;
 
+#define DATA_64                 ((uint64_t)0x0000000000000065)
+
 /* Table used for fast programming */
 static const uint64_t Data64_To_Prog[FLASH_ROW_SIZE] = {
-  0x0000000000000061, 0x1111111111111111, 0x2222222222222222, 0x3333333333333333,
+  0x0000000000000062, 0x0000000000000062, 0x0000000000000063, 0x3333333333333333,
   0x4444444444444444, 0x5555555555555555, 0x6666666666666666, 0x7777777777777777,
   0x8888888888888888, 0x9999999999999999, 0xAAAAAAAAAAAAAAAA, 0xBBBBBBBBBBBBBBBB,
   0xCCCCCCCCCCCCCCCC, 0xDDDDDDDDDDDDDDDD, 0xEEEEEEEEEEEEEEEE, 0xFFFFFFFFFFFFFFFF,
   0x0011001100110011, 0x2233223322332233, 0x4455445544554455, 0x6677667766776677,
   0x8899889988998899, 0xAABBAABBAABBAABB, 0xCCDDCCDDCCDDCCDD, 0xEEFFEEFFEEFFEEFF,
   0x2200220022002200, 0x3311331133113311, 0x6644664466446644, 0x7755775577557755,
-  0xAA88AA88AA88AA88, 0xBB99BB99BB99BB99, 0xEECCEECCEECCEECC, 0x0000000000000061};
+  0xAA88AA88AA88AA88, 0xBB99BB99BB99BB99, 0xEECCEECCEECCEECC, 0x0000000000000062};
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -167,7 +182,6 @@ int main(void) {
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FAST, Address, (uint64_t)src_addr) == HAL_OK)
 		{
 			Address = Address + (FLASH_ROW_SIZE*sizeof(uint64_t));
-			printf("i wrote %d times\n", i++);
 		}
 		else
 		{
@@ -195,6 +209,7 @@ int main(void) {
 	/* Lock the Flash to disable the flash control register access (recommended
 	 to protect the FLASH memory against possible unwanted operation) *********/
 	HAL_FLASH_Lock();
+
 
 	/* Check if the programmed data is OK
 	  MemoryProgramStatus = 0: data programmed correctly
@@ -231,10 +246,31 @@ int main(void) {
 
 	/* Infinite loop */
 
+
 	HAL_FLASH_Unlock();
+
+	 Address = FLASH_USER_START_ADDR;
+
+	 __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
+
+	 	/* Get the bank */
+	 	BankNumber = GetBank(FLASH_USER_START_ADDR);
+
+	 	/* Fill EraseInit structure*/
+	 	EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASSERASE;
+	 	EraseInitStruct.Banks     = BankNumber;
+
+	 HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
+
+	HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, DATA_64);
 
 
 	uint64_t *p_address = FLASH_USER_START_ADDR;
+	uint64_t *p_address_at_end = FLASH_USER_END_ADDR;
+
+	char *p_address_256 = ADDR_FLASH_PAGE_256;
+	//uint64_t *p_address_257 = ADDR_FLASH_PAGE_257;
+
 
 	//printf("value at address: %x\n", *(p_address + 1));
 
@@ -246,8 +282,16 @@ int main(void) {
 		printf("p address val with string at %d: %s\n", i,  ullx(*(p_address + i)));
 	}
 
-	printf("char at 0: %c\n", (int)*(p_address));
-	printf("char at 31: %c\n", (int)*(p_address + 31));
+	printf("char at 256 32: %c\n", (int)*(p_address_256 + 33));
+	printf("char at 256 0: %c\n", (int)*(p_address_256));
+	//printf("char at 257 0: %c\n", (int)*(p_address_257));
+
+	printf("address of 256 0: %p\n", *p_address);
+	printf("address of 256 1: %p\n", (p_address_256 + 1));
+	printf("text: %c\n", (int)*(p_address));
+	printf("text: %c\n", (int)*(p_address + 1));
+	printf("text: %c\n", (int)*(p_address + 2));
+	printf("text: %c\n", (int)*(p_address + 3));
 
 	HAL_FLASH_Lock();
 
