@@ -6,7 +6,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "main.h"
+//#include "main.h"
 #include "heartbeat.h"
 #include "device_info.h"
 
