@@ -35,55 +35,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <inttypes.h>
-
-
-/*
- * http://www.st.com/content/ccc/resource/training/technical/
- * product_training/91/e3/aa/26/e6/69/4f/de/STM32L4_Memory_Flash.pdf/
- * files/STM32L4_Memory_Flash.pdf/jcr:content/translations/en.STM32L4_Memory_Flash.pdf
- *
- * 1mb flash
- * 2x512 kbyte banks
- * each 256 pages of 2kbyte memory/page
- * 8 row/page -> 256 byte/row
- *
- * 8 row * 256 kbyte * 256 page * 2 bank = 1Mbyte flash memory
- */
-
-
-#define FLASH_ROW_SIZE          32
-
-/* !!! Be careful the user area should be in another bank than the code !!! */
-#define FLASH_USER_START_ADDR   ADDR_FLASH_PAGE_256   /* Start @ of user Flash area */
-#define FLASH_USER_END_ADDR     ADDR_FLASH_PAGE_511 + FLASH_PAGE_SIZE - 1   /* End @ of user Flash area */
-
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-uint32_t BankNumber = 0;
-uint32_t Address = 0, PAGEError = 0;
-__IO uint32_t MemoryProgramStatus = 0;
-__IO uint64_t data64 = 0;
-
-/*Variable used for Erase procedure*/
-static FLASH_EraseInitTypeDef EraseInitStruct;
-
-#define DATA_64                 ((uint64_t)0x0000000000000065)
-
-/* Table used for fast programming */
-static const uint64_t Data64_To_Prog[FLASH_ROW_SIZE] = {
-  0x0000000000000062, 0x0000000000000062, 0x0000000000000063, 0x3333333333333333,
-  0x4444444444444444, 0x5555555555555555, 0x6666666666666666, 0x7777777777777777,
-  0x8888888888888888, 0x9999999999999999, 0xAAAAAAAAAAAAAAAA, 0xBBBBBBBBBBBBBBBB,
-  0xCCCCCCCCCCCCCCCC, 0xDDDDDDDDDDDDDDDD, 0xEEEEEEEEEEEEEEEE, 0xFFFFFFFFFFFFFFFF,
-  0x0011001100110011, 0x2233223322332233, 0x4455445544554455, 0x6677667766776677,
-  0x8899889988998899, 0xAABBAABBAABBAABB, 0xCCDDCCDDCCDDCCDD, 0xEEFFEEFFEEFFEEFF,
-  0x2200220022002200, 0x3311331133113311, 0x6644664466446644, 0x7755775577557755,
-  0xAA88AA88AA88AA88, 0xBB99BB99BB99BB99, 0xEECCEECCEECCEECC, 0x0000000000000062};
+#include "flash.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static uint32_t GetBank(uint32_t Address);
 
 
 #ifdef __GNUC__
@@ -104,27 +59,6 @@ void SystemClock_Config(void);
 static void Peripherals_Init(void);
 static void UART_Init(void);
 
-/*
- * returns uint64_t as hex in string format for embedded systems
- * https://stackoverflow.com/questions/9225567/how-to-print-a-int64-t-type-in-c
- */
-char* ullx(uint64_t val)
-{
-    static char buf[34] = { [0 ... 33] = 0 };
-    char* out = &buf[33];
-    uint64_t hval = val;
-    unsigned int hbase = 16;
-
-    do {
-        *out = "0123456789abcdef"[hval % hbase];
-        --out;
-        hval /= hbase;
-    } while(hval);
-
-    *out-- = 'x', *out = '0';
-
-    return out;
-}
 
 
 /**
@@ -134,209 +68,17 @@ char* ullx(uint64_t val)
  */
 int main(void) {
 
-	uint32_t src_addr = (uint32_t)Data64_To_Prog;
-	uint8_t data_index = 0;
-
 	Peripherals_Init();
 
-	/* Unlock the Flash to enable the flash control register access *************/
-	HAL_FLASH_Unlock();
+	save_device_info_to_flash(ADDR_FLASH_PAGE_256, (uint64_t) 0x62);
 
-	/* Erase the user Flash area
-	(area defined by FLASH_USER_START_ADDR and FLASH_USER_END_ADDR) ***********/
-
-	/* Clear OPTVERR bit set on virgin samples */
-	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
-
-	/* Get the bank */
-	BankNumber = GetBank(FLASH_USER_START_ADDR);
-
-	/* Fill EraseInit structure*/
-	EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASSERASE;
-	EraseInitStruct.Banks     = BankNumber;
-
-	if (HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError) != HAL_OK)
-	{
-		/*
-		  Error occurred while mass erase.
-		  User can add here some code to deal with this error.
-		  To know the code error, user can call function 'HAL_FLASH_GetError()'
-		*/
-		/* Infinite loop */
-		while (1)
-		{
-			printf("Error using flash erase!\n");
-			HAL_Delay(500);
-		}
+	while (1) {
+		printf("here\n");
+		read_device_info_from_flash(ADDR_FLASH_PAGE_256);
+		HAL_Delay(1000);
 	}
-
-	/* Program the user Flash area word by word
-	(area defined by FLASH_USER_START_ADDR and FLASH_USER_END_ADDR) ***********/
-
-	Address = FLASH_USER_START_ADDR;
-
-	int i = 0;
-	while (Address < (FLASH_USER_END_ADDR - (FLASH_ROW_SIZE*sizeof(uint64_t))))
-	{
-
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FAST, Address, (uint64_t)src_addr) == HAL_OK)
-		{
-			Address = Address + (FLASH_ROW_SIZE*sizeof(uint64_t));
-		}
-		else
-		{
-		  /* Error occurred while writing data in Flash memory.
-			 User can add here some code to deal with this error */
-			while (1)
-			{
-				printf("Error using flash programming fast!\n");
-				HAL_Delay(500);
-			 }
-		}
-	}
-
-	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FAST_AND_LAST, Address, (uint64_t)src_addr) != HAL_OK)
-	{
-		/* Error occurred while writing data in Flash memory.
-		   User can add here some code to deal with this error */
-		while (1)
-		{
-			printf("Error using flash programming fast and last!\n");
-			HAL_Delay(500);
-		}
-	}
-
-	/* Lock the Flash to disable the flash control register access (recommended
-	 to protect the FLASH memory against possible unwanted operation) *********/
-	HAL_FLASH_Lock();
-
-
-	/* Check if the programmed data is OK
-	  MemoryProgramStatus = 0: data programmed correctly
-	  MemoryProgramStatus != 0: number of words not programmed correctly ******/
-	Address = FLASH_USER_START_ADDR;
-	MemoryProgramStatus = 0x0;
-
-	while (Address < FLASH_USER_END_ADDR)
-	{
-		for (data_index = 0; data_index < FLASH_ROW_SIZE; data_index++)
-		{
-			data64 = *(__IO uint64_t *)Address;
-
-			if(data64 != Data64_To_Prog[data_index])
-			{
-				MemoryProgramStatus++;
-			}
-
-			Address = Address + sizeof(uint64_t);
-		}
-	}
-
-	/*Check if there is an issue to program data*/
-	if (MemoryProgramStatus == 0)
-	{
-	/* No error detected. Switch on LED1*/
-		printf("no error detected in memory check!\n");
-	}
-	else
-	{
-	/* Error detected. Switch on LED2*/
-		printf("some error detected in memory check!\n");
-	}
-
-	/* Infinite loop */
-
-
-	HAL_FLASH_Unlock();
-
-	 Address = FLASH_USER_START_ADDR;
-
-	 __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR);
-
-	 	/* Get the bank */
-	 	BankNumber = GetBank(FLASH_USER_START_ADDR);
-
-	 	/* Fill EraseInit structure*/
-	 	EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASSERASE;
-	 	EraseInitStruct.Banks     = BankNumber;
-
-	 HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError);
-
-	HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, Address, DATA_64);
-
-
-	uint64_t *p_address = FLASH_USER_START_ADDR;
-	uint64_t *p_address_at_end = FLASH_USER_END_ADDR;
-
-	char *p_address_256 = ADDR_FLASH_PAGE_256;
-	//uint64_t *p_address_257 = ADDR_FLASH_PAGE_257;
-
-
-	//printf("value at address: %x\n", *(p_address + 1));
-
-	printf("%" PRIx64 "\n", *(p_address));
-
-	printf("p address value = %jd (0x%jx)\n", *(p_address + 1), *(p_address + 1));
-
-	for (int i = 0; i < 32; ++i) {
-		printf("p address val with string at %d: %s\n", i,  ullx(*(p_address + i)));
-	}
-
-	printf("char at 256 32: %c\n", (int)*(p_address_256 + 33));
-	printf("char at 256 0: %c\n", (int)*(p_address_256));
-	//printf("char at 257 0: %c\n", (int)*(p_address_257));
-
-	printf("address of 256 0: %p\n", *p_address);
-	printf("address of 256 1: %p\n", (p_address_256 + 1));
-	printf("text: %c\n", (int)*(p_address));
-	printf("text: %c\n", (int)*(p_address + 1));
-	printf("text: %c\n", (int)*(p_address + 2));
-	printf("text: %c\n", (int)*(p_address + 3));
-
-	HAL_FLASH_Lock();
-
-	while (1){}
 
 }
-
-/**
-* @brief  Gets the bank of a given address
-* @param  Addr: Address of the FLASH Memory
-* @retval The bank of a given address
-*/
-static uint32_t GetBank(uint32_t Addr)
-{
-	uint32_t bank = 0;
-
-	if (READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE) == 0)
-	{
-	/* No Bank swap */
-		if (Addr < (FLASH_BASE + FLASH_BANK_SIZE))
-		{
-			bank = FLASH_BANK_1;
-		}
-		else
-		{
-			bank = FLASH_BANK_2;
-		}
-	}
-	else
-	{
-		/* Bank swap */
-		if (Addr < (FLASH_BASE + FLASH_BANK_SIZE))
-		{
-			bank = FLASH_BANK_2;
-		}
-		else
-		{
-			bank = FLASH_BANK_1;
-		}
-	}
-
-
-	return bank;
-}
-
 
 static void Peripherals_Init(void) {
 	/* STM32L4xx HAL library initialization:
