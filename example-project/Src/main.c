@@ -96,9 +96,10 @@ NetSecure_InitTypeDef secConfig;
 MQTT_NetInitTypeDef mqttConfig;
 extern device_config_t device;
 extern TIM_HandleTypeDef TIM4Handle;
+extern TIM_HandleTypeDef TIM_Ping_Handle;
 
 uint8_t MAC_Addr[6];
-uint8_t IP_Addr[4];
+extern uint8_t IP_Addr[4];
 
 int should_GGL_publish = FALSE;
 int should_check_temp = FALSE;
@@ -121,7 +122,7 @@ static void Peripherals_Init(void);
 static void SW_STACK_Init(void);
 static void UART_Init(void);
 static void RNG_Init(void);
-static void WIFI_GoOnline(void);
+void WIFI_GoOnline(void);
 
 /*
  * functions for SSDP discovery mode
@@ -164,18 +165,19 @@ static void SimpleMQTT_Example(device_config_t *device);
  */
 int main(void)
 {
+
 	Peripherals_Init();
-/*
 
 	SW_STACK_Init();
 
 	WIFI_GoOnline();
 
 
-	 * set initial device state
+	 //* set initial device state
 
-	device.state_of_device = STATE_GGL_CORE;
+//	device.state_of_device = STATE_SSDP_DISCOVERY;
 
+/*
 
 	 * FUT
 	 * pseudo code for checking if device config was saved,
@@ -193,7 +195,8 @@ int main(void)
 		}
 	}
 
-
+*/
+/*
 	while (1) {
 
 		switch (device.state_of_device) {
@@ -426,7 +429,7 @@ static void SimpleMQTT_Example(device_config_t *device) {
 }
 */
 
-static void WIFI_GoOnline(void) {
+void WIFI_GoOnline(void) {
 	uint8_t online = 0;
 	uint32_t tryCount = 1;
 	tryConnect = 1;
@@ -482,7 +485,7 @@ static void WIFI_GoOnline(void) {
 		tryConnect = 0;
 		rtcCount++;
 	}
-
+	ping_timer(&TIM_Ping_Handle);
 }
 
 static void SW_STACK_Init() {
@@ -547,8 +550,7 @@ static void Peripherals_Init(void) {
 	/*
 	 * FUT
 	 */
-	TIM4_Init(&TIM4Handle);
-	ping_timer(&TIM_Ping_Handle);
+	//TIM4_Init(&TIM4Handle);
 
 	// initialize real time clock peripheral
 	RTCUtils_RTCInit();

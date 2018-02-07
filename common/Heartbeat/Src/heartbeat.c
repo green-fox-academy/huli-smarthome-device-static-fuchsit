@@ -15,6 +15,7 @@
 #include "main.h"
 #include "heartbeat.h"
 #include "aircondi.h"
+#include "wifi.h"
 
 volatile int restart_enabled = FALSE;
 volatile int restart_needed = FALSE;
@@ -22,6 +23,8 @@ volatile uint32_t process_start;
 volatile uint32_t restart_timeout_deadlie;
 TIM_HandleTypeDef TIM4Handle;
 TIM_HandleTypeDef TIM_Ping_Handle;
+uint8_t wifi_flag = 1;
+uint8_t IP_Addr[4];
 extern should_check_temp; // prevents checking air_temperature before seting up operation
 
 void set_restart_timeout(uint32_t timeout) {
@@ -48,10 +51,11 @@ void stop_restart_timeout() {
 //TIM_HandleTypeDef TIM4Handle;
 
 void ping_timer(TIM_HandleTypeDef *htim){
-	__HAL_RCC_TIM16_CLK_ENABLE();
 
-	TIM_Ping_Handle.Instance = TIM16;
-	TIM_Ping_Handle.Init.Period            = 16000 - 1;
+	__HAL_RCC_TIM7_CLK_ENABLE();
+
+	TIM_Ping_Handle.Instance = TIM7;
+	TIM_Ping_Handle.Init.Period            = 40000 - 1;
 	TIM_Ping_Handle.Init.Prescaler         = 10000 - 1; // FUT to be calculated
 	TIM_Ping_Handle.Init.ClockDivision     = 0;
 	TIM_Ping_Handle.Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -61,20 +65,14 @@ void ping_timer(TIM_HandleTypeDef *htim){
 
 	HAL_TIM_Base_Start_IT(&TIM_Ping_Handle);
 
-	HAL_NVIC_SetPriority(TIM16_IRQn, 3, 0);
-	HAL_NVIC_EnableIRQ(TIM16_IRQn);
+	HAL_NVIC_SetPriority(TIM7_IRQn, 0xFF, 0x00);
+	HAL_NVIC_EnableIRQ(TIM7_IRQn);
 
-	void TIM16_IRQHandler(void)
-	{
-	  HAL_TIM_IRQHandler(&TIM_Ping_Handle);
-	}
-
-	void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-		printf("(^) (^) (^) (^) (^)SOCKET\n");
-		BSP_LED_Toggle(LED_GREEN);
-	}
 }
-
+void TIM7_IRQHandler(void)
+{
+	HAL_TIM_IRQHandler(&TIM_Ping_Handle);
+}
 
 void TIM4_Init(TIM_HandleTypeDef *htim)
 {
@@ -158,9 +156,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 /*	if (restart_due_to_timeout_needed())
  *	restart_procedure();
  */
+	if(TIM_Ping_Handle.Instance == TIM7){
+		printf("ping begin\n\n");
+		if(WIFI_Ping(IP_Addr[4] , 3 , 3000 ) != WIFI_STATUS_OK){
+			printf("you lost your connection\n\n");
+			wifi_flag = 0;
+			if (wifi_flag == 0){
+				BSP_LED_Off(LED_GREEN);
+				WIFI_GoOnline();
+				wifi_flag = 1;
+			}
+		} else if (wifi_flag == 1) {
+			printf("you have wifi conncetion\n\n");
+			wifi_flag = 2;
+			BSP_LED_On(LED_GREEN);
+		}
+	}
 
-	if (should_check_temp)
-		temp_range_set_and_fan_controll(user_min, user_max);
+	if (TIM4Handle.Instance == TIM4) {
+		if (should_check_temp){
+			temp_range_set_and_fan_controll(user_min, user_max);
+		}
+	}
 
 }
 /* **************************************** */
