@@ -5,8 +5,6 @@
  *  Created on: Jan 25, 2018
  *      Author: Ádám
  */
-
-#include "main.h"
 #include "aircondi.h"
 
 int is_fan_working = FALSE;
@@ -55,9 +53,9 @@ void temp_range_set_and_fan_controll(int user_min, int user_max) {
 void airconditioner_temperature_range_parsing(char temperature_range[]){
 
 
-    if (strcmp(temperature_range, "on") == 1) {
+    if (strstr(temperature_range, "on")) {
     	fan_state = FAN_ON;
-    } else if (strcmp(temperature_range, "off") == 1) {
+    } else if (strstr(temperature_range, "off")) {
     	fan_state = FAN_OFF;
     } else {
     	user_max = strtol(temperature_range , NULL , 10);
