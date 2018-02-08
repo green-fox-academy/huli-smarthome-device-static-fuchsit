@@ -50,7 +50,7 @@ void stop_restart_timeout() {
 
 //TIM_HandleTypeDef TIM4Handle;
 
-void ping_timer(TIM_HandleTypeDef *htim){
+void wifi_ping_timer(TIM_HandleTypeDef *htim){
 
 	__HAL_RCC_TIM7_CLK_ENABLE();
 
@@ -157,19 +157,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
  *	restart_procedure();
  */
 	if(TIM_Ping_Handle.Instance == TIM7){
-		printf("ping begin\n\n");
-		if(WIFI_Ping(IP_Addr[4] , 3 , 3000 ) != WIFI_STATUS_OK){
+		printf("ping begin, %d.%d.%d.%d\r\n",
+				IP_Addr[0], IP_Addr[1], IP_Addr[2], IP_Addr[3]);
+		printf("flag: %d\n", wifi_flag);
+		if (WIFI_Ping(IP_Addr , 1 , 250 ) != WIFI_STATUS_OK){
+			BSP_LED_Off(LED_GREEN);
 			printf("you lost your connection\n\n");
 			wifi_flag = 0;
-			if (wifi_flag == 0){
-				BSP_LED_Off(LED_GREEN);
-				WIFI_GoOnline();
-				wifi_flag = 1;
-			}
+			printf("flagoff: %d\n", wifi_flag);
 		} else if (wifi_flag == 1) {
+			printf("flagon: %d\n", wifi_flag);
 			printf("you have wifi conncetion\n\n");
-			wifi_flag = 2;
 			BSP_LED_On(LED_GREEN);
+			wifi_flag = 2;
 		}
 	}
 

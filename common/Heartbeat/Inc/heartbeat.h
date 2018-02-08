@@ -38,7 +38,7 @@ int restart_due_to_timeout_needed();
   * and net connection timeouts
   */
 void TIM4_Init(TIM_HandleTypeDef *htim);
-void ping_timer(TIM_HandleTypeDef *htim);
+void wifi_ping_timer(TIM_HandleTypeDef *htim);
 
 void TIM4_IRQHandler(void);
 void TIM7_IRQHandler(void);

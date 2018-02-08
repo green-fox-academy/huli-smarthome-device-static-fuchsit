@@ -485,7 +485,7 @@ void WIFI_GoOnline(void) {
 		tryConnect = 0;
 		rtcCount++;
 	}
-	ping_timer(&TIM_Ping_Handle);
+	wifi_ping_timer(&TIM_Ping_Handle);
 }
 
 static void SW_STACK_Init() {
