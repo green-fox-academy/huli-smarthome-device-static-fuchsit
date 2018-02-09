@@ -34,16 +34,16 @@ void json_hexa_for_rgbled(char led_color_hexa_RGB[]) {
 
 void LED_ON (int _red, int _blue, int _green) {
 
-	TIM3->RED = (255 - _red);
-	TIM3->BLUE = (255 - _blue);
-	TIM2->GREEN = (255 - _green);
+	TIM3->RED = (_red);
+	TIM3->BLUE = (_blue);
+	TIM2->GREEN = (_green);
 }
 
 void LED_OFF (void) {
 
-	TIM3->RED = 257;
-	TIM3->BLUE = 257;
-	TIM2->GREEN = 257;
+	TIM3->RED = 0;
+	TIM3->BLUE = 0;
+	TIM2->GREEN = 0;
 }
 
 void RGB_Init(void) {
