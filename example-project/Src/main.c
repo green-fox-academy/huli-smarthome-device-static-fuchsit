@@ -83,8 +83,11 @@ uint32_t socketId = 0;
 const char *STATE_PATTERN = "{\"ledOn\": %d}";
 
 /* Private define ------------------------------------------------------------*/
-#define SSID     "A66 Guest"
-#define PASSWORD "Hello123"
+//#define SSID     "A66 Guest"
+//#define PASSWORD "Hello123"
+
+#define SSID     "AndroidAP"
+#define PASSWORD "Buzi3vagy"
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -344,7 +347,7 @@ static void Wolfmqtt_PublishReceive(const char *host, int port, device_config_t 
 
 		if (should_GGL_publish) {
 			stop_callback_timer();
-			report_fan_state_and_temperature();
+			//report_fan_state_and_temperature();
 			should_GGL_publish = FALSE;
 			start_callback_timer();
 		}

@@ -34,16 +34,16 @@ void json_hexa_for_rgbled(char led_color_hexa_RGB[]) {
 
 void LED_ON (int _red, int _blue, int _green) {
 
-	TIM3->RED = (255 - _red);
-	TIM3->BLUE = (255 - _blue);
-	TIM2->GREEN = (255 - _green);
+	TIM3->RED = _red;
+	TIM3->BLUE = _blue;
+	TIM2->GREEN = _green;
 }
 
 void LED_OFF (void) {
 
-	TIM3->RED = 257;
-	TIM3->BLUE = 257;
-	TIM2->GREEN = 257;
+	TIM3->RED = 0;
+	TIM3->BLUE = 0;
+	TIM2->GREEN = 0;
 }
 
 void RGB_Init(void) {
@@ -133,7 +133,7 @@ void LED_Init_RED(void) {
 	__HAL_RCC_GPIOB_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
 	LEDRED.Pin = REDPIN;            // this is about PIN 1
-	LEDRED.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
+	LEDRED.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
 	LEDRED.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
 	LEDRED.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
 	LEDRED.Alternate = GPIO_AF2_TIM3;   //Alternate function to set PWM timer
@@ -145,7 +145,7 @@ void LED_Init_BLUE(void) {
 	__HAL_RCC_GPIOA_CLK_ENABLE();    // we need to enable the GPIO* port's clock first
 
 	LEDBLUE.Pin = BLUEPIN;            // this is about PIN 1
-	LEDBLUE.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
+	LEDBLUE.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
 	LEDBLUE.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
 	LEDBLUE.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
 	LEDBLUE.Alternate = GPIO_AF2_TIM3;   //Alterante function to set PWM timer
@@ -156,7 +156,7 @@ void LED_Init_BLUE(void) {
 void LED_Init_GREEN(void) {
 
 	LEDGREEN.Pin = GREENPIN;            // this is about PIN 1
-	LEDGREEN.Mode = GPIO_MODE_AF_OD; // Configure as output with push-up-down enabled
+	LEDGREEN.Mode = GPIO_MODE_AF_PP; // Configure as output with push-up-down enabled
 	LEDGREEN.Pull = GPIO_NOPULL;      // the push-up-down should work as pulldown
 	LEDGREEN.Speed = GPIO_SPEED_HIGH;     // we need a high-speed output
 	LEDGREEN.Alternate = GPIO_AF1_TIM2;   //Alterante function to set PWM timer
