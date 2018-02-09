@@ -10,6 +10,7 @@ extern device_config_t device;
 
 int RGB_init_flag = 0;
 int Aircondi_init_flag = 0;
+int plug_init_flag = 0;
 
 
 void main_control() {
@@ -17,8 +18,8 @@ if (strstr(device.device_name, "LED_CONTROLLER")) {
 		device.device_type = LED_CONTROLLER;
 	} else if (strstr(device.device_name, "COFFEE_MAKER")) {
 		device.device_type = COFFEE_MAKER;
-	} else if (strstr(device.device_name, "SMART_LIGTH")) {
-		device.device_type = SMART_LIGTH;
+	} else if (strstr(device.device_name, "SMART_PLUG")) {
+		device.device_type = SMART_PLUG;
 	} else if (strstr(device.device_name, "AIR_CONDITIONER")) {
 		device.device_type = AIR_CONDITIONER;
 	}
@@ -35,8 +36,13 @@ if (strstr(device.device_name, "LED_CONTROLLER")) {
     case COFFEE_MAKER:
     	//call COFFEE_MAKER;
     	break;
-    case SMART_LIGTH:
-    	//call SMART_LIGTH;
+    case SMART_PLUG:
+    	if (plug_init_flag  == 0) {
+    		plug_init();
+    	    plug_init_flag = 1;
+    	}
+    	smart_plug_parsing (device.plug);
+    	report_status_plug ();
     	break;
     case AIR_CONDITIONER:
     	if (Aircondi_init_flag == 0) {
@@ -65,6 +71,18 @@ void report_fan_state_and_temperature () {
 	int rc;
 	char buffer[50];
 	sprintf (buffer, "{\"Temperature state\": \"%d\" }", air_temperature);
+	if ((rc = GGL_MQTT_Publish("state", buffer))
+			!= RC_SUCCESS) {
+		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,
+				MqttClient_ReturnCodeToString(rc));
+	}
+}
+
+void report_status_plug () {
+
+	int rc;
+	char buffer[50];
+	sprintf (buffer, "{\"state\": \"%s\" }", device.plug);
 	if ((rc = GGL_MQTT_Publish("state", buffer))
 			!= RC_SUCCESS) {
 		printf("ERROR: GGL_MQTT_Publish FAILED %d - %s\r\n", rc,

@@ -21,7 +21,7 @@ typedef enum State_Of_Operation {
 typedef enum Device_Type {
 	LED_CONTROLLER,
 	COFFEE_MAKER,
-	SMART_LIGTH,
+	SMART_PLUG,
 	AIR_CONDITIONER
 } Device_Type;
 
@@ -36,7 +36,7 @@ typedef struct device_config{
     int device_port[12];
     char *color;
     char *temperature;
-    //char *fan_state;
+    char *plug;
     Device_Type device_type;
     State_Of_Operation state_of_device;
 } device_config_t;

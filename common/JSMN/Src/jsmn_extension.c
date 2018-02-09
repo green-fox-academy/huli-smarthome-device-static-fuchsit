@@ -71,6 +71,12 @@ int parse_JSON(device_config_t *conf_struct, char *JSON_STRING) {
 					JSON_STRING + t[i+1].start);
 			conf_struct->temperature = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
 			i++;
+		} else if (strstr(conf_struct->device_name, "SMART_PLUG") && jsoneq(JSON_STRING, &t[i], "Plug") == 0) {
+			 //We may additionally check if the value is either "true" or "false"
+			printf("- Plug: %.*s\n", t[i+1].end-t[i+1].start,
+					JSON_STRING + t[i+1].start);
+			conf_struct->plug = strndup(JSON_STRING + t[i+1].start,t[i+1].end-t[i+1].start);
+			i++;
 		} else {
 			printf("Unexpected key: %.*s\n", t[i].end-t[i].start,
 					JSON_STRING + t[i].start);

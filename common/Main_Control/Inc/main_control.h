@@ -8,6 +8,7 @@
 #include "rgb_led_color.h"
 #include "aircondi.h"
 #include "google_iot.h"
+#include "smart_plug.h"
 
 /*
  * controls the main function, state updating, reporting
@@ -21,3 +22,4 @@ void main_control();
  */
 void report_status_color ();
 void report_fan_state_and_temperature ();
+void report_status_plug ();
