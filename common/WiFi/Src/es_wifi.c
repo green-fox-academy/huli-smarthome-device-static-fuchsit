@@ -44,6 +44,8 @@
   */
 /* Includes ------------------------------------------------------------------*/
 #include "es_wifi.h"
+#include "wifi.h"
+#include "stm32l475e_iot01.h"
 
 #define AT_OK_STRING "\r\nOK\r\n> "
 #define AT_OK_STRING_LEN 8
@@ -501,11 +503,14 @@ static void AT_ParseConnSettings(char *pdata, ES_WIFI_Network_t *NetSettings)
   */
 static ES_WIFI_Status_t AT_ExecuteCommand(ES_WIFIObject_t *Obj, uint8_t* cmd, uint8_t *pdata)
 {
+	//printf("AT_Execute_ping\n\n");
   if(Obj->fops.IO_Send(cmd, strlen((char*)cmd), Obj->Timeout) > 0)
   {
-    int16_t n=Obj->fops.IO_Receive(pdata, 0, Obj->Timeout);
+	  //printf("AT_Execute_ping2\n\n");
+	int16_t n=Obj->fops.IO_Receive(pdata, 0, Obj->Timeout);
     if(n > 0)
     {
+    	//printf("AT_Execute_ping3\n\n");
       *(pdata+n)=0;
       if(strstr((char *)pdata, AT_OK_STRING))
       {
@@ -1182,25 +1187,30 @@ ES_WIFI_Status_t ES_WIFI_GetSystemConfig(ES_WIFIObject_t *Obj, ES_WIFI_SystemCon
   */
 ES_WIFI_Status_t ES_WIFI_Ping(ES_WIFIObject_t *Obj, uint8_t *address, uint16_t count, uint16_t interval_ms)
 {
+
+//printf("ïn es wifi ping\n");
+
   ES_WIFI_Status_t ret;
  
   sprintf((char*)Obj->CmdData,"T1=%d.%d.%d.%d\r", address[0],address[1],
           address[2],address[3]);
   ret = AT_ExecuteCommand(Obj, Obj->CmdData, Obj->CmdData);
-  
+  //printf("ret: %d\n \n" , ret);
   if(ret == ES_WIFI_STATUS_OK)
   {
-    
+	//printf("ïn es wifi ping2\n");
     sprintf((char*)Obj->CmdData,"T2=%d\r", count);
     ret = AT_ExecuteCommand(Obj, Obj->CmdData, Obj->CmdData);
     
     if(ret == ES_WIFI_STATUS_OK)
     {
+    //printf("ïn es wifi ping3\n");
       sprintf((char*)Obj->CmdData,"T3=%d\r", interval_ms);
       ret = AT_ExecuteCommand(Obj, Obj->CmdData, Obj->CmdData);
       
       if(ret == ES_WIFI_STATUS_OK)
       {
+    	//printf("ïn es wifi ping4\n");
         sprintf((char*)Obj->CmdData,"T0=\r");
         ret = AT_ExecuteCommand(Obj, Obj->CmdData, Obj->CmdData);         
       }
@@ -1436,7 +1446,14 @@ ES_WIFI_Status_t ES_WIFI_StartServerSingleConn(ES_WIFIObject_t *Obj, ES_WIFI_Con
               }
               Obj->fops.IO_Delay(1000);
               printf("waiting for incoming client request\n");
-              HAL_Delay(1000);
+              int PC_IP_adr[4] = {10,27,99,104};
+              if (WIFI_Ping(PC_IP_adr,1,250) != WIFI_STATUS_OK){
+            	  printf("you lost connection\n\n");
+            	  BSP_LED_Off(LED_GREEN);
+              }else{
+            	  printf("You are connected \n\n");
+              }
+              //HAL_Delay(1000);
             } while (1);
 #endif  
           }

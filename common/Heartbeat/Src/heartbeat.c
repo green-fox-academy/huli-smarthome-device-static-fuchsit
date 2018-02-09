@@ -65,7 +65,7 @@ void wifi_ping_timer(TIM_HandleTypeDef *htim){
 
 	HAL_TIM_Base_Start_IT(&TIM_Ping_Handle);
 
-	HAL_NVIC_SetPriority(TIM7_IRQn, 0xFF, 0x00);
+	HAL_NVIC_SetPriority(TIM7_IRQn, 0xC, 0x00);
 	HAL_NVIC_EnableIRQ(TIM7_IRQn);
 
 }
@@ -156,11 +156,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 /*	if (restart_due_to_timeout_needed())
  *	restart_procedure();
  */
+	int PC_IP_adr[4] = {10,27,99,104};
 	if(TIM_Ping_Handle.Instance == TIM7){
-		printf("ping begin, %d.%d.%d.%d\r\n",
-				IP_Addr[0], IP_Addr[1], IP_Addr[2], IP_Addr[3]);
+		printf("ping begin, %d.%d.%d.%d\r\n", IP_Addr[0], IP_Addr[1], IP_Addr[2], IP_Addr[3]);
 		printf("flag: %d\n", wifi_flag);
-		if (WIFI_Ping(IP_Addr , 1 , 250 ) != WIFI_STATUS_OK){
+		printf("%d\n\n" , HAL_GetTick());
+		if (WIFI_Ping( PC_IP_adr , 1 , 250 ) != WIFI_STATUS_OK){
 			BSP_LED_Off(LED_GREEN);
 			printf("you lost your connection\n\n");
 			wifi_flag = 0;
@@ -172,12 +173,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			wifi_flag = 2;
 		}
 	}
-
+/*
 	if (TIM4Handle.Instance == TIM4) {
 		if (should_check_temp){
 			temp_range_set_and_fan_controll(user_min, user_max);
 		}
-	}
+	}*/
 
 }
 /* **************************************** */

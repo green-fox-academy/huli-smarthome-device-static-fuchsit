@@ -172,10 +172,11 @@ int main(void)
 
 	WIFI_GoOnline();
 
+	//wifi_ping_timer(&TIM_Ping_Handle);
 
 	 //* set initial device state
 
-//	device.state_of_device = STATE_SSDP_DISCOVERY;
+	device.state_of_device = STATE_SSDP_DISCOVERY;
 
 /*
 
@@ -196,7 +197,7 @@ int main(void)
 	}
 
 */
-/*
+
 	while (1) {
 
 		switch (device.state_of_device) {
@@ -214,7 +215,7 @@ int main(void)
 			break;
 		}
 	}
-*/
+
 
 }
 
@@ -444,6 +445,7 @@ void WIFI_GoOnline(void) {
 					SSID, tryCount);
 		} else {
 			online = 1;
+			BSP_LED_On(LED_GREEN);
 		}
 		tryConnect = 0;
 		tryCount++;
@@ -485,7 +487,7 @@ void WIFI_GoOnline(void) {
 		tryConnect = 0;
 		rtcCount++;
 	}
-	wifi_ping_timer(&TIM_Ping_Handle);
+	//wifi_ping_timer(&TIM_Ping_Handle);
 }
 
 static void SW_STACK_Init() {
@@ -562,7 +564,8 @@ void EXTI15_10_IRQHandler() {
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	tryConnect = 1;
+	//tryConnect = 1;
+	WIFI_GoOnline();
 }
 
 static void RNG_Init(void) {

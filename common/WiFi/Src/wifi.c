@@ -253,10 +253,13 @@ WIFI_Status_t WIFI_HandleAPEvents(WIFI_APSettings_t *setting)
   */
 WIFI_Status_t WIFI_Ping(uint8_t* ipaddr, uint16_t count, uint16_t interval_ms)
 {
+
+  //printf("ïn wifi ping\n");
   WIFI_Status_t ret = WIFI_STATUS_ERROR;  
 
   if(ES_WIFI_Ping(&EsWifiObj, ipaddr, count, interval_ms) == ES_WIFI_STATUS_OK)
   {
+	//printf("ïn wifi ping2\n");
     ret = WIFI_STATUS_OK;
   }
   return ret;
